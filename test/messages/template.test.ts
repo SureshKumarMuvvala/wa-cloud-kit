@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   WaValidationError,
   buildTemplateMessage,
+  renderSignatureParameter,
   type SendTemplateInput,
 } from "../../src/index.js";
 import { sentJson, testClient } from "../helpers/client.js";
@@ -213,5 +214,81 @@ describe("template messages: shape (test 14)", () => {
       WaValidationError,
     );
     expect(fake.calls).toHaveLength(0);
+  });
+});
+
+describe("template messages: full invoice example (test 15)", () => {
+  it("header PDF + named body + rendered signature matches the snapshot", () => {
+    const signature = renderSignatureParameter({
+      signature: { name: "Accounts Team", title: "Billing", company: "Example Traders" },
+      parameterName: "signature",
+    });
+    const payload = buildTemplateMessage({
+      to: TEST_RECIPIENT,
+      name: "invoice_ready",
+      languageCode: "en",
+      header: { document: { id: "3000000000001" } },
+      body: {
+        format: "named",
+        parameters: [
+          { type: "text", parameter_name: "customer_name", text: "Asha" },
+          { type: "text", parameter_name: "invoice_no", text: "INV-2026-0042" },
+          { type: "text", parameter_name: "amount", text: "INR 1,250.50" },
+          signature,
+        ],
+      },
+    });
+    expect(payload).toMatchInlineSnapshot(`
+      {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "template": {
+          "components": [
+            {
+              "parameters": [
+                {
+                  "document": {
+                    "id": "3000000000001",
+                  },
+                  "type": "document",
+                },
+              ],
+              "type": "header",
+            },
+            {
+              "parameters": [
+                {
+                  "parameter_name": "customer_name",
+                  "text": "Asha",
+                  "type": "text",
+                },
+                {
+                  "parameter_name": "invoice_no",
+                  "text": "INV-2026-0042",
+                  "type": "text",
+                },
+                {
+                  "parameter_name": "amount",
+                  "text": "INR 1,250.50",
+                  "type": "text",
+                },
+                {
+                  "parameter_name": "signature",
+                  "text": "Accounts Team | Billing | Example Traders",
+                  "type": "text",
+                },
+              ],
+              "type": "body",
+            },
+          ],
+          "language": {
+            "code": "en",
+          },
+          "name": "invoice_ready",
+        },
+        "to": "+15550000001",
+        "type": "template",
+      }
+    `);
   });
 });

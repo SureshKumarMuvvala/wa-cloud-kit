@@ -89,3 +89,13 @@ export {
   type WaMessageStatus,
   type WaWebhookError,
 } from "./webhooks/schemas.js";
+export {
+  DEFAULT_SIGNATURE_SEPARATOR,
+  RenderSignatureInputSchema,
+  TEMPLATE_BODY_MAX_CHARS,
+  TenantSignatureSchema,
+  assertTemplateBodyLength,
+  renderSignatureParameter,
+  type RenderSignatureInput,
+  type TenantSignature,
+} from "./signature/render.js";
