@@ -15,3 +15,10 @@ When defining your media object, you can either [upload your media asset](https:
 "type": "date_time",
 "fallback_value": "MONTH DAY, YEAR"
 ```
+
+## Added for v0.2 (retrieved 2026-10-16)
+
+```text
+Before creating the template, you must upload your media file using the Resumable Upload API. This upload returns a media ID, which you then use as the value for the `header_handle` field in the template's header component.
+            "4::aW..."
+```

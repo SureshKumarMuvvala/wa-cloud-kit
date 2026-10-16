@@ -14,3 +14,15 @@ The body component represents the core text of your message template and is a te
 | `<BODY_TEXT>`<br><br>_String_ | **Required.**<br><br>Body text string. Supports multiple [parameters](https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/overview#parameter-formats).<br><br>Maximum of 1024 characters. | `Thank you, {{first_name}}! Your order number is {{order_number}}.` |
 | `<TEXT>` | Text to appear in template footer when sent.<br><br>60 characters maximum. | `Use the buttons below to manage your marketing subscriptions` |
 ```
+
+## Added for v0.2 (retrieved 2026-10-16)
+
+```text
+Templates are made up of four primary components which you define when you create a template: header, body, footer, and buttons. The components you choose for each of your templates should be based on your business needs. The only required component is the body component.
+Media headers can be an image, video, gif, or a document such as a PDF. You must upload all media with the [Resumable Upload API](https://developers.facebook.com/docs/graph-api/guides/upload). The syntax for defining a media header is the same for all media types.
+  "format": "<FORMAT>",
+    "header_handle": [
+        "header_handle": [
+| `<HEADER_HANDLE>` | Uploaded media asset handle. Use the [Resumable Upload API](https://developers.facebook.com/docs/graph-api/guides/upload) to generate an asset handle. | `4::aW...` |
+Text headers are optional elements that can be added to the top of template messages. Each template may include only one text header. Do not use Markdown special characters in this component.
+```

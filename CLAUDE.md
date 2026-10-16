@@ -44,7 +44,7 @@ Any API shape, field name, limit, enum value, error code, policy (templates, the
 - Transport goes only through the injected `fetch` (default `globalThis.fetch`). There is no Meta SDK and no runtime dependency besides the `zod` peer.
 - No global or module-level mutable state, no caching and no storage.
 - No `any`, no non-null `!` on external data, no `@ts-ignore`. Use `unknown` plus Zod.
-- Errors are typed classes (`WaApiError`, `WaHttpError`, `WaTransportError`, `WaResponseShapeError`, `WaValidationError`). Categorize by Graph `code` only (F-071).
+- Errors are typed classes (`WaApiError`, `WaHttpError`, `WaTransportError`, `WaResponseShapeError`, `WaValidationError`). Categorize by Graph `code` only (F-071). **One narrow exception (D-11):** `error_subcode` may be matched, and only against the documented `2388xxx` template-creation group (`2388024`, `2388039`, `2388040`, `2388047`, `2388072`, `2388073`, `2388293`, `2388299`; F-104, F-122, G-17), to yield category `template_creation`. No other subcode is ever matched; `2388019` (G-20) and `132018` (F-123) are excluded.
 - Crypto uses WebCrypto (`globalThis.crypto.subtle`) so it runs in Node ≥22 and edge runtimes.
 
 ## Security & test data

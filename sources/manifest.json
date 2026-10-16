@@ -321,6 +321,116 @@
       "bytes": 176760,
       "sha256": "1383a7dab338b9a1d765fb0e73fe89e3c62511b928793c2c216620bd38dcaa32",
       "excerpt": "sources/graph-webhooks.md"
+    },
+    {
+      "slug": "tpl-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-account/message-template-api.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 30808,
+      "sha256": "d596d69bf106e788956d2b6626dd25a0c2d4cd0f2611a56019e462c15f711383",
+      "excerpt": "sources/tpl-api.md"
+    },
+    {
+      "slug": "tpl-management",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/template-management.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 17603,
+      "sha256": "f6e5cba1d7711a31ef21cfe94b12600cf2a58803b63894f59dcc946d75d47c9f",
+      "excerpt": "sources/tpl-management.md"
+    },
+    {
+      "slug": "tpl-status-webhook",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/message_template_status_update.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 10821,
+      "sha256": "b473a1e888342b9e1353271da8b2f5b9e4123fba51a285f5842619028a670f01",
+      "excerpt": "sources/tpl-status-webhook.md"
+    },
+    {
+      "slug": "media-download-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/media/media-download-api.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 1989,
+      "sha256": "f0cb37817d3218ea6dceb19841c92bb0ded23087b70ba1cf47d4c019f5b51685",
+      "excerpt": "sources/media-download-api.md"
+    },
+    {
+      "slug": "sp-overview",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/overview.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 12684,
+      "sha256": "d5256bcf73484a2b4d70aed515ae5c353bbb0cbe6c3d8def72b8e7db81bfe23b",
+      "excerpt": "sources/sp-overview.md"
+    },
+    {
+      "slug": "sp-tech-provider",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/get-started-for-tech-providers.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 6714,
+      "sha256": "56e00da68d3966844f103f9ab24c42777ea701a2db7d1b22803a1e0666b0950d",
+      "excerpt": "sources/sp-tech-provider.md"
+    },
+    {
+      "slug": "es-overview",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/overview.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 16389,
+      "sha256": "69ec3e0fa5d18926007eea468f13f7a8ea8a9df77da605d53226b4d1fc3a3126",
+      "excerpt": "sources/es-overview.md"
+    },
+    {
+      "slug": "es-onboarding",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-customers-as-a-tech-provider.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 12984,
+      "sha256": "91eae389a4c876b3c6defc0a96be7a1dee562348366817de2e51037f50b6fd31",
+      "excerpt": "sources/es-onboarding.md"
+    },
+    {
+      "slug": "es-implementation",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/implementation.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 20828,
+      "sha256": "5b7256a2df721b736b15c83e04d08c83d77307aac84cc23c1e4de78d248d36dd",
+      "excerpt": "sources/es-implementation.md"
+    },
+    {
+      "slug": "es-versions",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/versions.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 14351,
+      "sha256": "43b6b611d07d7eff38696d519b17e287da5ed22877fa9f64b99d30fae380a903",
+      "excerpt": "sources/es-versions.md"
+    },
+    {
+      "slug": "webhook-override",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/override.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 9459,
+      "sha256": "ee5aae203860e48ac4a9684eee44ae9b4644138940ed19f73cb21f4614a02730",
+      "excerpt": "sources/webhook-override.md"
     }
   ]
 }
