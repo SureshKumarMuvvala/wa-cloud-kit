@@ -1,0 +1,7 @@
+dist/
+node_modules/
+pnpm-lock.yaml
+sources/
+docs/
+CLAUDE.md
+.changeset/*.md
