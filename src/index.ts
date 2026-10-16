@@ -65,3 +65,27 @@ export {
   type UploadMediaResponse,
   type UploadMediaResult,
 } from "./media/upload.js";
+export {
+  verifyWebhookChallenge,
+  type WebhookChallengeQuery,
+  type WebhookChallengeResult,
+} from "./webhooks/verify-challenge.js";
+export {
+  verifyWebhookSignature,
+  type VerifyWebhookSignatureInput,
+} from "./webhooks/verify-signature.js";
+export {
+  parseWebhookPayload,
+  type ParsedWebhook,
+  type WaWebhookContact,
+  type WaWebhookEvent,
+} from "./webhooks/parse.js";
+export {
+  KNOWN_MESSAGE_STATUSES,
+  KNOWN_MESSAGE_TYPES,
+  WebhookEnvelopeSchema,
+  type WaInboundMessage,
+  type WaKnownMessageStatus,
+  type WaMessageStatus,
+  type WaWebhookError,
+} from "./webhooks/schemas.js";
