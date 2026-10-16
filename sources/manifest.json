@@ -1,0 +1,326 @@
+{
+  "retrieved": "2026-10-16",
+  "note": "sha256 is of the raw HTTP response body. HTML pages (graph-*) embed per-request tokens, so their hash is not stable across fetches; compare their excerpts instead.",
+  "sources": [
+    {
+      "slug": "message-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-phone-number/message-api.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 13661,
+      "sha256": "55ac95f3f363f325808abe095f85997df7b188cf86441b74f0677823e51a6988",
+      "excerpt": "sources/message-api.md"
+    },
+    {
+      "slug": "send-messages",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/send-messages.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 17953,
+      "sha256": "08420f192277e8188c44710e9d805033b0d756cd26fe4968b5a7b208dd2d6697",
+      "excerpt": "sources/send-messages.md"
+    },
+    {
+      "slug": "text-messages",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/text-messages.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 4182,
+      "sha256": "da7f545e3a6ccba310b6c34938206dae21c20bbb1222f43b632f6a758d42a4e4",
+      "excerpt": "sources/text-messages.md"
+    },
+    {
+      "slug": "document-messages",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/document-messages.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 5620,
+      "sha256": "5bc7f82147b39d802ff89c306199a8aecdd19a7a89144ecece9246a930bc26ab",
+      "excerpt": "sources/document-messages.md"
+    },
+    {
+      "slug": "templates-overview",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/overview.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 17251,
+      "sha256": "d1dadcc3a75f52e8af76421804e04bc338054b89f1c8d164799d402a8d6165a7",
+      "excerpt": "sources/templates-overview.md"
+    },
+    {
+      "slug": "templates-components",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/components.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 26124,
+      "sha256": "459032a551fcad1b8833d8e4d4f732e5c775735b586229a223561778255f4fb8",
+      "excerpt": "sources/templates-components.md"
+    },
+    {
+      "slug": "template-media",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/template-media.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 4944,
+      "sha256": "dcb716bb10e2838fc43ce45375e13264f12b6cbda1e6f801ae0624f366c8b917",
+      "excerpt": "sources/template-media.md"
+    },
+    {
+      "slug": "template-review",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/template-review.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 6153,
+      "sha256": "c3005ef648010546d3f213ad995beea5ca7e9534856f6effe112c18472e10fdf",
+      "excerpt": "sources/template-review.md"
+    },
+    {
+      "slug": "template-categorization",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/template-categorization.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 37003,
+      "sha256": "113190104a6ebb8d7009059850152526c2537d8d1170c1dc74ebd13e58226e3b",
+      "excerpt": "sources/template-categorization.md"
+    },
+    {
+      "slug": "utility-templates",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/utility-templates/utility-templates.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 20678,
+      "sha256": "87da4d9329ce209b739d950ed7139e80379867e28fdd9772142bfd05c45ae0d1",
+      "excerpt": "sources/utility-templates.md"
+    },
+    {
+      "slug": "error-codes",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/support/error-codes.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 38544,
+      "sha256": "3aed9d40530a24b9555769c1fc62a3d6d4610105799e48622cd09dd93044e904",
+      "excerpt": "sources/error-codes.md"
+    },
+    {
+      "slug": "media-upload-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-phone-number/media-upload-api.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 2322,
+      "sha256": "e6799caf072d3655a55b837af1081a36f2fb79d8ad6a67c3832dd6cc62fe4075",
+      "excerpt": "sources/media-upload-api.md"
+    },
+    {
+      "slug": "media-guide",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/business-phone-numbers/media.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 11322,
+      "sha256": "fc9a13003c02d63a63d1f8cb81c06d03b75c24054939c1fb3cc1a74f5f9c03a5",
+      "excerpt": "sources/media-guide.md"
+    },
+    {
+      "slug": "media-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/media/media-api.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 4271,
+      "sha256": "b1487fc5e5bcd0271dc319bfcbff229c12444ede1a4e8c030913faa6e21df00d",
+      "excerpt": "sources/media-api.md"
+    },
+    {
+      "slug": "webhooks-overview",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 15414,
+      "sha256": "8635b1574fe892bd4ee3d98e5e1d30c873760f31267ab2ef4385aba13429501a",
+      "excerpt": "sources/webhooks-overview.md"
+    },
+    {
+      "slug": "create-webhook-endpoint",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/create-webhook-endpoint.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 7086,
+      "sha256": "9d2189ca896b5278d5ccd5da50e21fd15a96be73fee95236c400c3772f7de03f",
+      "excerpt": "sources/create-webhook-endpoint.md"
+    },
+    {
+      "slug": "incoming-webhook-payload",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/webhooks/whatsapp-incoming-webhook-payload.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 17043,
+      "sha256": "d5614db1e8d1eadf05f36b9e3e81ff19e978ebed513bc8991c242f15150d0191",
+      "excerpt": "sources/incoming-webhook-payload.md"
+    },
+    {
+      "slug": "wh-messages",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 5434,
+      "sha256": "8d726d4082ad5c7c616689d4fdea7a60b24f3426a23c37de93ebcc22422322d6",
+      "excerpt": "sources/wh-messages.md"
+    },
+    {
+      "slug": "wh-text",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/text.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 15430,
+      "sha256": "f3e51a935bfa63f57c60546ebf1e51f0653f10b631d326228d5efd5932407123",
+      "excerpt": "sources/wh-text.md"
+    },
+    {
+      "slug": "wh-document",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/document.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 10263,
+      "sha256": "de203c74beee1dce4e2c805124157987bfa06adba4b74262b2b08959f7794770",
+      "excerpt": "sources/wh-document.md"
+    },
+    {
+      "slug": "wh-image",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/image.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 10539,
+      "sha256": "b967418aa25280b8cb9c2fd529d77dea2156fd5e744404c26a6f4722e7ab5cf6",
+      "excerpt": "sources/wh-image.md"
+    },
+    {
+      "slug": "wh-button",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/button.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 6207,
+      "sha256": "0c68d4da9444bc5e4f46ea4a0405ee71d70b303bfa0f36c442f2d6e4ee92a465",
+      "excerpt": "sources/wh-button.md"
+    },
+    {
+      "slug": "wh-unsupported",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/unsupported.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 8588,
+      "sha256": "e83c0f42e7537af6e6c4e8c839249e40fb20912446ebbf965e47eaaac478b650",
+      "excerpt": "sources/wh-unsupported.md"
+    },
+    {
+      "slug": "wh-status",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/status.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 18258,
+      "sha256": "fad358ba51ab83a546b438222c84a52f2383873adcfc4fd911de0bec26d8a2d4",
+      "excerpt": "sources/wh-status.md"
+    },
+    {
+      "slug": "wh-errors",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/errors.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 4559,
+      "sha256": "77006e8f4bb83d018417e6f6b58d3e39fece428bf693b09177b0944726ead61b",
+      "excerpt": "sources/wh-errors.md"
+    },
+    {
+      "slug": "access-tokens",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/access-tokens.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 8921,
+      "sha256": "2ce5d1d34be96f548b925f337b16a6c2f5ae1f1dce7d1e3ce934341a0b80a4ed",
+      "excerpt": "sources/access-tokens.md"
+    },
+    {
+      "slug": "throughput",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/throughput.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 4964,
+      "sha256": "fb9c1e2c09cc382f01c846e5f87bbf4e4d34fc5254ae82919a245b6c2a7b8780",
+      "excerpt": "sources/throughput.md"
+    },
+    {
+      "slug": "pricing",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 37440,
+      "sha256": "468b8fca999fa83b782c3e9074a4591bc87b85d70d0cd057ce3644f353375b44",
+      "excerpt": "sources/pricing.md"
+    },
+    {
+      "slug": "pricing-non-template",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing/non-template-messages.md",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 12371,
+      "sha256": "0136212bfa55d0e5bd0f6db0f90c56d3c18d8f21556a9174735e2276aed57efb",
+      "excerpt": "sources/pricing-non-template.md"
+    },
+    {
+      "slug": "graph-versions",
+      "url": "https://developers.facebook.com/docs/graph-api/changelog/versions",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "html",
+      "bytes": 175593,
+      "sha256": "0e127da50c028e2cb432fa34d5de77e80b9ea1062c26049c31d2436e8603cd5c",
+      "excerpt": "sources/graph-versions.md"
+    },
+    {
+      "slug": "graph-versioning",
+      "url": "https://developers.facebook.com/docs/graph-api/guides/versioning",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "html",
+      "bytes": 172740,
+      "sha256": "b90f971c04bca4bd8ba3c33e01ab44bec877f176768b86f5573dea2630967ec8",
+      "excerpt": "sources/graph-versioning.md"
+    },
+    {
+      "slug": "graph-webhooks",
+      "url": "https://developers.facebook.com/docs/graph-api/webhooks/getting-started",
+      "retrieved": "2026-10-16",
+      "http_status": 200,
+      "format": "html",
+      "bytes": 176760,
+      "sha256": "1383a7dab338b9a1d765fb0e73fe89e3c62511b928793c2c216620bd38dcaa32",
+      "excerpt": "sources/graph-webhooks.md"
+    }
+  ]
+}
