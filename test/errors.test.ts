@@ -89,3 +89,58 @@ describe("error classes", () => {
     expect(error.bodyText).toHaveLength(2048);
   });
 });
+
+// Test 54: template_creation (D-7, D-11; F-104, F-122, G-17, G-20).
+describe("template_creation category (test 54)", () => {
+  const GROUP = [2388024, 2388039, 2388040, 2388047, 2388072, 2388073, 2388293, 2388299];
+
+  it.each(GROUP)("maps %i as a code to template_creation", (code) => {
+    expect(waErrorCategory(code)).toBe("template_creation");
+  });
+
+  it.each(GROUP)("maps %i as a subcode of code 100 to template_creation", (subcode) => {
+    expect(waErrorCategory(100, subcode)).toBe("template_creation");
+  });
+
+  it("keeps a bare code 100 as parameter", () => {
+    expect(waErrorCategory(100)).toBe("parameter");
+    expect(waErrorCategory(100, undefined)).toBe("parameter");
+  });
+
+  it.each([132018, 2388019])("does not map %i to template_creation (F-123, G-20)", (id) => {
+    expect(waErrorCategory(id)).toBe("unknown");
+    expect(waErrorCategory(100, id)).toBe("parameter");
+  });
+
+  it.each([2388103, 33, 2494010, 0])(
+    "never lets an unlisted subcode %i change the category",
+    (sub) => {
+      expect(waErrorCategory(100, sub)).toBe("parameter");
+      expect(waErrorCategory(131047, sub)).toBe("service_window_closed");
+      expect(waErrorCategory(190, sub)).toBe("auth");
+    },
+  );
+
+  it("WaApiError passes the subcode through from a 400 envelope", () => {
+    const bySubcode = new WaApiError({
+      httpStatus: 400,
+      envelope: {
+        error: { message: "(#100) Invalid parameter", code: 100, error_subcode: 2388299 },
+      },
+    });
+    expect(bySubcode.category).toBe("template_creation");
+    expect(bySubcode.errorSubcode).toBe(2388299);
+
+    const byCode = new WaApiError({
+      httpStatus: 400,
+      envelope: { error: { message: "(#2388040) Character limit exceeded", code: 2388040 } },
+    });
+    expect(byCode.category).toBe("template_creation");
+
+    const plain = new WaApiError({
+      httpStatus: 400,
+      envelope: { error: { message: "(#100) Invalid parameter", code: 100, error_subcode: 33 } },
+    });
+    expect(plain.category).toBe("parameter");
+  });
+});

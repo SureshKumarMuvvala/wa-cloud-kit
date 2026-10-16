@@ -5,6 +5,7 @@ export interface RecordedCall {
   headers: Record<string, string>;
   body: unknown;
   signal: AbortSignal | undefined;
+  redirect: RequestRedirect | undefined;
 }
 
 /** One canned reply: a Response, a factory, or an error to throw. */
@@ -37,6 +38,7 @@ export function fakeFetch(replies: readonly FakeReply[]): FakeFetch {
       headers,
       body: init?.body,
       signal: init?.signal ?? undefined,
+      redirect: init?.redirect,
     };
     calls.push(call);
     const reply = replies[index];

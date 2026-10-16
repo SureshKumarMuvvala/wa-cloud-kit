@@ -7,7 +7,16 @@ const tseslint = require("typescript-eslint");
 const prettier = require("eslint-config-prettier");
 
 module.exports = tseslint.config(
-  { ignores: ["dist/", "node_modules/", "coverage/", "sources/", "eslint.config.cjs"] },
+  {
+    ignores: [
+      "dist/",
+      "examples-dist/",
+      "node_modules/",
+      "coverage/",
+      "sources/",
+      "eslint.config.cjs",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,

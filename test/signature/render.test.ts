@@ -105,10 +105,11 @@ describe("renderSignatureParameter (tests 37-41)", () => {
 });
 
 describe("assertTemplateBodyLength (test 42)", () => {
-  // "Hello {{customer_name}}, invoice {{invoice_no}}. Regards, {{signature}}"
-  const namedBody = "Hello {{customer_name}}, invoice {{invoice_no}}. Regards, {{signature}}";
-  const positionalBody = "Hello {{1}}, invoice {{2}}. Regards, {{3}}";
-  const fixedNamed = "Hello , invoice . Regards, ".length;
+  // Bodies end in static text: a trailing parameter is rejected by Meta (F-049).
+  const namedBody =
+    "Hello {{customer_name}}, invoice {{invoice_no}}. Regards, {{signature}}. Thank you.";
+  const positionalBody = "Hello {{1}}, invoice {{2}}. Regards, {{3}}. Thank you.";
+  const fixedNamed = "Hello , invoice . Regards, . Thank you.".length;
   const fixedPositional = fixedNamed;
 
   function named(signatureLength: number) {
@@ -149,16 +150,16 @@ describe("assertTemplateBodyLength (test 42)", () => {
   });
 
   it("substitutes every occurrence of a placeholder", () => {
-    const body = "{{name}} {{name}}";
-    const value = "n".repeat(512);
+    const body = "Hi {{name}} {{name}}.";
+    const value = "n".repeat(510);
     expect(() => {
       assertTemplateBodyLength(body, [{ type: "text", parameter_name: "name", text: value }]);
-    }).toThrow(WaValidationError); // 512 + 1 + 512 = 1025
+    }).toThrow(WaValidationError); // 3 + 510 + 1 + 510 + 1 = 1025
     expect(() => {
       assertTemplateBodyLength(body, [
         { type: "text", parameter_name: "name", text: value.slice(1) },
       ]);
-    }).not.toThrow(); // 511 + 1 + 511 = 1023
+    }).not.toThrow(); // 3 + 509 + 1 + 509 + 1 = 1023
   });
 
   it("works with a rendered signature parameter", () => {
@@ -167,7 +168,7 @@ describe("assertTemplateBodyLength (test 42)", () => {
       parameterName: "signature",
     });
     expect(() => {
-      assertTemplateBodyLength("Regards, {{signature}}", [signature]);
+      assertTemplateBodyLength("Contact {{signature}}. Thank you.", [signature]);
     }).not.toThrow();
   });
 });

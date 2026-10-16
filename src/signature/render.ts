@@ -50,6 +50,12 @@ export type RenderSignatureInput = z.input<typeof RenderSignatureInputSchema>;
  * leave a dangling or empty parameter (F-049). `#`, `$` and `%` are NOT
  * stripped: F-049 lists them as template-review rejection reasons for the
  * template definition, not for send-time values.
+ *
+ * The parameter fills a placeholder in a template you registered earlier. That
+ * body must not start or end with a parameter (F-049, error `2388299`), so end
+ * it in static text:
+ *
+ * Template body: `Hello {{customer_name}}, invoice {{invoice_number}} is attached. For any questions contact {{signature}}. Thank you.`
  */
 export function renderSignatureParameter(
   input: RenderSignatureInput & { parameterName: string },
@@ -89,7 +95,8 @@ const PLACEHOLDER = /\{\{([a-z_]+|[1-9]\d*)\}\}/g; // named (F-042) or positiona
 /**
  * Substitutes `{{name}}` (named parameters, F-042) or `{{n}}` (positional,
  * F-043) in the approved template body with the parameter values and throws
- * `WaValidationError` if the result exceeds 1024 characters (F-044).
+ * `WaValidationError` if the result exceeds 1024 characters (F-044). This is a
+ * length check only; it does not enforce F-049 (that is `createTemplate`'s job).
  * Placeholders without a value are left as they are [lib]. Length counts
  * UTF-16 code units [lib]. Optional: the library does not hold templates.
  */

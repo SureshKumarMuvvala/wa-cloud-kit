@@ -6,6 +6,8 @@ import {
   KnownMessageSchema,
   MessagesValueSchema,
   OtherMessageSchema,
+  TEMPLATE_STATUS_EVENTS,
+  TemplateStatusValueSchema,
   WebhookEnvelopeSchema,
   type WaInboundMessage,
   type WaMessageStatus,
@@ -24,14 +26,46 @@ export interface WaWebhookContact {
   waId?: string;
 }
 
+/**
+ * A `message_template_status_update` event (F-117, F-118, F-161). The payload
+ * has no `metadata`, so this has no `phoneNumberId`: the tenant is identified
+ * by `wabaId` only. Template webhooks always go to the app's default callback
+ * (F-161).
+ */
+export interface WaTemplateStatusEvent {
+  kind: "template_status";
+  /** `entry[].id` (F-117). */
+  wabaId: string;
+  /** `entry[].time` (F-117, G-15). */
+  eventTime?: number;
+  /** An integer on the wire; a string here (G-15). */
+  templateId: string;
+  templateName: string;
+  templateLanguage: string;
+  /** Not narrowed (D-9); `knownEvent` says whether it is in {@link TEMPLATE_STATUS_EVENTS}. */
+  event: string;
+  knownEvent: boolean;
+  /** `null` when the template is scheduled for deletion (F-117). */
+  reason: string | null;
+  /** `MARKETING`, `UTILITY` or `AUTHENTICATION` (F-117). */
+  category?: string;
+  /** `disable_info.disable_date` (F-118, C-12). */
+  disableDate?: number;
+  /** Pause and unpause details (F-118). */
+  other?: { title: string; description?: string };
+  /** Only for `INVALID_FORMAT` rejections (F-118, G-12). */
+  rejection?: { reason: string; recommendation?: string };
+}
+
 export type WaWebhookEvent =
+  | WaTemplateStatusEvent
   | (WebhookEventBase & { kind: "message"; contact?: WaWebhookContact; message: WaInboundMessage })
   | (WebhookEventBase & { kind: "status"; status: WaMessageStatus })
   | (WebhookEventBase & { kind: "error"; error: WaWebhookError });
 
 export interface ParsedWebhook {
   events: WaWebhookEvent[];
-  /** Changes whose `field` is not `messages` (group_* and future fields). */
+  /** Changes whose `field` is neither `messages` nor `message_template_status_update`. */
   skippedChanges: number;
 }
 
@@ -45,6 +79,54 @@ function parseOrThrow<S extends z.ZodType>(
     throw WaValidationError.fromZod(context, result.error);
   }
   return result.data;
+}
+
+function isKnownTemplateEvent(event: string): boolean {
+  return (TEMPLATE_STATUS_EVENTS as readonly string[]).includes(event);
+}
+
+function toTemplateStatusEvent(
+  wabaId: string,
+  eventTime: number | undefined,
+  value: z.output<typeof TemplateStatusValueSchema>,
+): WaTemplateStatusEvent {
+  const rawDate = value.disable_info?.disable_date;
+  const disableDate =
+    typeof rawDate === "string" ? (/^\d+$/.test(rawDate) ? Number(rawDate) : undefined) : rawDate;
+  const { other_info: other, rejection_info: rejection } = value;
+  return {
+    kind: "template_status",
+    wabaId,
+    ...(eventTime === undefined ? {} : { eventTime }),
+    templateId: String(value.message_template_id),
+    templateName: value.message_template_name,
+    templateLanguage: value.message_template_language,
+    event: value.event,
+    knownEvent: isKnownTemplateEvent(value.event),
+    reason: value.reason ?? null,
+    ...(value.message_template_category === undefined
+      ? {}
+      : { category: value.message_template_category }),
+    ...(disableDate === undefined ? {} : { disableDate }),
+    ...(other === undefined
+      ? {}
+      : {
+          other: {
+            title: other.title,
+            ...(other.description === undefined ? {} : { description: other.description }),
+          },
+        }),
+    ...(rejection === undefined
+      ? {}
+      : {
+          rejection: {
+            reason: rejection.reason,
+            ...(rejection.recommendation === undefined
+              ? {}
+              : { recommendation: rejection.recommendation }),
+          },
+        }),
+  };
 }
 
 function isKnownType(type: string): boolean {
@@ -71,8 +153,8 @@ function toContact(
  *
  * - `object` must be `whatsapp_business_account` (F-085), else
  *   `WaValidationError`.
- * - Only `field === "messages"` changes are mapped; others increment
- *   `skippedChanges` [lib].
+ * - `field === "messages"` and `field === "message_template_status_update"`
+ *   changes are mapped (v0.2); others increment `skippedChanges` [lib].
  * - Order is entry → change → messages, then statuses, then errors.
  * - Unknown message types become `{type: "other"}` [lib]; unknown statuses
  *   become `known: false` (D-1).
@@ -88,6 +170,15 @@ export function parseWebhookPayload(body: unknown): ParsedWebhook {
 
   for (const entry of payload.entry) {
     for (const change of entry.changes) {
+      if (change.field === "message_template_status_update") {
+        const value = parseOrThrow(
+          TemplateStatusValueSchema,
+          change.value,
+          "Invalid template status webhook value",
+        );
+        events.push(toTemplateStatusEvent(entry.id, entry.time, value));
+        continue;
+      }
       if (change.field !== "messages") {
         skippedChanges += 1;
         continue;

@@ -5,3 +5,4 @@ sources/
 docs/
 CLAUDE.md
 .changeset/*.md
+examples-dist/

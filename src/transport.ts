@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { ResolvedConfig } from "./config.js";
+import type { TransportConfig } from "./config.js";
 import {
   GraphErrorEnvelopeSchema,
   WaApiError,
@@ -8,15 +8,39 @@ import {
   WaTransportError,
 } from "./errors.js";
 
-/** Phone-number edges used by v0.1 (F-001, F-060). */
-export type PhoneNumberEdge = "messages" | "media";
+/** Query values; `undefined` entries are skipped. */
+export type QueryParams = Readonly<Record<string, string | number | undefined>>;
 
-export type RequestBody =
-  { path: PhoneNumberEdge; json: unknown } | { path: PhoneNumberEdge; form: FormData };
+/**
+ * One Graph API call [lib]. `path` is everything after the version segment,
+ * with no leading slash (for example `"<phone-number-id>/messages"`).
+ *
+ * - `json` sets `Content-Type: application/json` (F-001); `form` sends
+ *   multipart and lets fetch add the boundary (F-060); with neither, no body
+ *   and no `Content-Type` are sent.
+ * - `parse` defaults to `"json"`; `"none"` ignores a 2xx body and validates
+ *   `undefined` against the schema (pass `z.undefined()`).
+ */
+export interface RequestSpec {
+  method: "GET" | "POST" | "DELETE";
+  path: string;
+  query?: QueryParams;
+  json?: unknown;
+  form?: FormData;
+  parse?: "json" | "none";
+}
 
-function buildUrl(config: ResolvedConfig, path: PhoneNumberEdge): string {
+/** `baseUrl/version/path[?query]`, shared by the JSON transport and the media download. */
+export function buildGraphUrl(config: TransportConfig, path: string, query?: QueryParams): string {
   const base = config.baseUrl.replace(/\/+$/, "");
-  return `${base}/${config.graphApiVersion}/${config.phoneNumberId}/${path}`;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value !== undefined) {
+      params.append(key, String(value));
+    }
+  }
+  const search = params.toString();
+  return `${base}/${config.graphApiVersion}/${path}${search === "" ? "" : `?${search}`}`;
 }
 
 function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false } {
@@ -28,7 +52,22 @@ function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false 
 }
 
 /**
- * Sends one POST to the Graph API through the injected fetch and maps the
+ * Maps a non-2xx response body to {@link WaApiError} (Graph envelope, F-070)
+ * or {@link WaHttpError}. Internal.
+ */
+export function toHttpFailure(httpStatus: number, text: string): WaApiError | WaHttpError {
+  const parsed = tryParseJson(text);
+  if (parsed.ok) {
+    const envelope = GraphErrorEnvelopeSchema.safeParse(parsed.value);
+    if (envelope.success) {
+      return new WaApiError({ httpStatus, envelope: envelope.data });
+    }
+  }
+  return new WaHttpError({ httpStatus, bodyText: text });
+}
+
+/**
+ * Sends one request to the Graph API through the injected fetch and maps the
  * result. Internal.
  *
  * - `fetch` throws → {@link WaTransportError}
@@ -39,22 +78,20 @@ function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false 
  * The access token is only ever placed in the `Authorization` header (F-002).
  */
 export async function request<S extends z.ZodType>(
-  config: ResolvedConfig,
-  body: RequestBody,
+  config: TransportConfig,
+  spec: RequestSpec,
   schema: S,
   signal?: AbortSignal,
 ): Promise<z.output<S>> {
   const fetchImpl = config.fetch ?? globalThis.fetch;
   const headers = new Headers({ Authorization: `Bearer ${config.accessToken}` }); // F-002
-  let payload: string | FormData;
-  if ("json" in body) {
+  const init: RequestInit = { method: spec.method, headers };
+  if ("json" in spec) {
     headers.set("Content-Type", "application/json"); // F-001
-    payload = JSON.stringify(body.json);
-  } else {
-    payload = body.form; // fetch sets the multipart boundary (F-060)
+    init.body = JSON.stringify(spec.json);
+  } else if (spec.form !== undefined) {
+    init.body = spec.form; // fetch sets the multipart boundary (F-060)
   }
-
-  const init: RequestInit = { method: "POST", headers, body: payload };
   if (signal !== undefined) {
     init.signal = signal;
   }
@@ -62,34 +99,34 @@ export async function request<S extends z.ZodType>(
   let text: string;
   let response: Response;
   try {
-    response = await fetchImpl(buildUrl(config, body.path), init);
+    response = await fetchImpl(buildGraphUrl(config, spec.path, spec.query), init);
     text = await response.text();
   } catch (cause) {
     throw new WaTransportError("Request to the WhatsApp Cloud API failed", { cause });
   }
 
-  const parsed = tryParseJson(text);
   if (!response.ok) {
-    if (parsed.ok) {
-      const envelope = GraphErrorEnvelopeSchema.safeParse(parsed.value);
-      if (envelope.success) {
-        throw new WaApiError({ httpStatus: response.status, envelope: envelope.data });
-      }
-    }
-    throw new WaHttpError({ httpStatus: response.status, bodyText: text });
+    throw toHttpFailure(response.status, text);
   }
 
-  if (!parsed.ok) {
-    throw new WaResponseShapeError({
-      issues: [
-        { code: "custom", message: "Response body is not valid JSON", path: [], input: text },
-      ],
-      raw: text,
-    });
+  let value: unknown;
+  if (spec.parse === "none") {
+    value = undefined;
+  } else {
+    const parsed = tryParseJson(text);
+    if (!parsed.ok) {
+      throw new WaResponseShapeError({
+        issues: [
+          { code: "custom", message: "Response body is not valid JSON", path: [], input: text },
+        ],
+        raw: text,
+      });
+    }
+    value = parsed.value;
   }
-  const result = schema.safeParse(parsed.value);
+  const result = schema.safeParse(value);
   if (!result.success) {
-    throw new WaResponseShapeError({ issues: result.error.issues, raw: parsed.value });
+    throw new WaResponseShapeError({ issues: result.error.issues, raw: value });
   }
   return result.data;
 }

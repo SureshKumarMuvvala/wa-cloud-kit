@@ -21,7 +21,10 @@ export const GraphErrorEnvelopeSchema = z.object({
 });
 export type GraphErrorEnvelope = z.infer<typeof GraphErrorEnvelopeSchema>;
 
-/** Error categories, derived from the Graph `code` only (F-071, G-5). */
+/**
+ * Error categories, derived from the Graph `code` (F-071, G-5). The one
+ * exception is `template_creation`, which may also match `error_subcode` (D-11).
+ */
 export type WaErrorCategory =
   | "auth"
   | "integrity"
@@ -32,6 +35,7 @@ export type WaErrorCategory =
   | "media"
   | "parameter"
   | "server"
+  | "template_creation"
   | "unknown";
 
 const CODE_CATEGORIES: ReadonlyMap<number, WaErrorCategory> = new Map<number, WaErrorCategory>([
@@ -86,10 +90,33 @@ const CODE_CATEGORIES: ReadonlyMap<number, WaErrorCategory> = new Map<number, Wa
 ]);
 
 /**
- * Categorizes a Graph API / webhook error `code` (F-071, F-072). Never uses
- * HTTP status or subcode. Unlisted codes are `"unknown"` [lib].
+ * The documented "Template creation errors" group (F-122): `2388024` is the
+ * duplicate name+language identifier (F-104). Excluded on purpose: `2388019`,
+ * which Meta files under send-template errors (G-20, D-10), and `132018`
+ * (F-123). D-7, D-11.
  */
-export function waErrorCategory(code: number): WaErrorCategory {
+const TEMPLATE_CREATION_IDS: ReadonlySet<number> = new Set([
+  2388024, 2388039, 2388040, 2388047, 2388072, 2388073, 2388293, 2388299,
+]); // F-104, F-122
+
+/**
+ * Categorizes a Graph API / webhook error (F-071, F-072). Never uses the HTTP
+ * status. Unlisted codes are `"unknown"` [lib].
+ *
+ * The category comes from `code` alone, with one narrow exception (D-11): if
+ * `code` or `subcode` is one of the documented `2388xxx` template-creation
+ * identifiers (F-104, F-122, G-17), the category is `"template_creation"`.
+ * Meta documents these as codes on the error page (F-122) but as a subcode of
+ * `100` in the template guide (F-104), so either field matches. No other
+ * subcode is ever read.
+ */
+export function waErrorCategory(code: number, subcode?: number): WaErrorCategory {
+  if (
+    TEMPLATE_CREATION_IDS.has(code) ||
+    (subcode !== undefined && TEMPLATE_CREATION_IDS.has(subcode))
+  ) {
+    return "template_creation";
+  }
   if (code >= 200 && code <= 299) {
     return "auth"; // F-073: 200–299
   }
@@ -143,7 +170,7 @@ export class WaApiError extends WaError {
     this.details = error.error_data?.details;
     this.fbtraceId = error.fbtrace_id;
     this.errorSubcode = error.error_subcode;
-    this.category = waErrorCategory(error.code);
+    this.category = waErrorCategory(error.code, error.error_subcode);
     this.raw = input.envelope;
   }
 }

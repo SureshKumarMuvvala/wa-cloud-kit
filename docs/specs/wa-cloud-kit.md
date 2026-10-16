@@ -345,7 +345,11 @@ export type WaWebhookError = { code: number; title: string; message?: string;
 
 ## 7. Signature helper (the tenant's sign-off as a template variable)
 
-The SaaS registers one utility template (F-050), for example a body like `… Regards, {{signature}}`. It fills `{{signature}}` per tenant.
+The SaaS registers one utility template (F-050), for example:
+
+Template body: `Hello {{customer_name}}, invoice {{invoice_number}} is attached. For any questions contact {{signature}}. Thank you.`
+
+It fills `{{signature}}` per tenant. The body ends in static text on purpose: Meta rejects a template that starts or ends with a parameter ("dangling parameters", F-049, error `2388299`).
 
 ```ts
 export interface TenantSignature {

@@ -33,7 +33,7 @@ Any API shape, field name, limit, enum value, error code, policy (templates, the
 - **TypeScript:** `~6.0` with `strict`, `module`/`moduleResolution` `NodeNext`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`.
 - **Zod 4:** peer `^4.0.0`, dev `4.5.4`.
 - **Tooling:** Vitest; ESLint flat config with `typescript-eslint` `strictTypeChecked`; Prettier; Changesets.
-- **Gate:** `pnpm check` (= `typecheck` + `lint` + `test`) must pass before every commit.
+- **Gate:** `pnpm check` (= `build` + `typecheck` + `typecheck:examples` + `lint` + `test`) must pass before every commit. The build comes first because `examples/` import from `dist/` (v0.2 spec §6, D-13).
 
 ## Code rules
 

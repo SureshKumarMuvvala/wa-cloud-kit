@@ -165,12 +165,53 @@ export const MessagesValueSchema = z.looseObject({
   errors: z.array(WebhookErrorSchema).optional(),
 });
 
+/** `event` values of `message_template_status_update` (F-117). */
+export const TEMPLATE_STATUS_EVENTS = [
+  "APPROVED",
+  "ARCHIVED",
+  "UNARCHIVED",
+  "DELETED",
+  "DISABLED",
+  "FLAGGED",
+  "IN_APPEAL",
+  "LIMIT_EXCEEDED",
+  "LOCKED",
+  "PAUSED",
+  "PENDING",
+  "REINSTATED",
+  "PENDING_DELETION",
+  "REJECTED",
+] as const; // F-117
+
+/**
+ * `value` of a `message_template_status_update` change (F-117, F-118).
+ * `message_template_id` is an integer on the wire (G-15). `disable_date` is an
+ * integer in the field table but a quoted string in the page's example (C-12),
+ * so both are accepted.
+ */
+export const TemplateStatusValueSchema = z.looseObject({
+  event: z.string(),
+  message_template_id: z.union([z.number(), z.string()]),
+  message_template_name: z.string(),
+  message_template_language: z.string(),
+  reason: z.string().nullable().optional(),
+  message_template_category: z.string().optional(),
+  disable_info: z
+    .looseObject({ disable_date: z.union([z.number(), z.string()]).optional() })
+    .optional(),
+  other_info: z.looseObject({ title: z.string(), description: z.string().optional() }).optional(),
+  rejection_info: z
+    .looseObject({ reason: z.string(), recommendation: z.string().optional() })
+    .optional(),
+});
+
 /** Webhook envelope (F-085). `object` is always `whatsapp_business_account`. */
 export const WebhookEnvelopeSchema = z.looseObject({
   object: z.literal("whatsapp_business_account"),
   entry: z.array(
     z.looseObject({
       id: z.string(), // WABA ID
+      time: z.number().optional(), // F-117, G-15
       changes: z.array(z.looseObject({ field: z.string(), value: z.unknown() })),
     }),
   ),
