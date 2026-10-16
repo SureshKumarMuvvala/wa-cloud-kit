@@ -1,8 +1,8 @@
 # wa-cloud-kit — v0.2 specification
 
-**Status:** Draft for maintainer review. Q-1–Q-4 answered 2026-10-16 (D-10–D-13). Spec only: no code changes in this branch.
+**Status:** Implemented on branch `track-wa/v0.2` (minor release). Q-1–Q-4 answered 2026-10-16 (D-10–D-13). Everything that needs Meta's live API is open in §10 and must be run before tagging v0.2.0.
 **Builds on:** [`wa-cloud-kit.md`](wa-cloud-kit.md) (v0.1, implemented). Section numbers here are independent; v0.1 sections are cited as "v0.1 §n".
-**Facts:** every Meta behaviour cites an ID in [`docs/facts.md`](../facts.md). New IDs in this spec: `F-100`–`F-125` (templates), `F-130`–`F-136` (media), `F-150`–`F-162` (multi-tenant), conflicts `C-6`–`C-11`, gaps `G-9`–`G-20`. All were retrieved on 2026-10-16. A behaviour without an ID is a library choice, labelled **[lib]**.
+**Facts:** every Meta behaviour cites an ID in [`docs/facts.md`](../facts.md). New IDs in this spec: `F-100`–`F-125` (templates), `F-130`–`F-136` (media), `F-150`–`F-162` (multi-tenant), conflicts `C-6`–`C-12`, gaps `G-9`–`G-20`. All were retrieved on 2026-10-16. A behaviour without an ID is a library choice, labelled **[lib]**.
 
 ---
 
@@ -84,6 +84,8 @@ CreateTemplateInput = z.strictObject({
   messageSendTtlSeconds: z.int().positive().optional(),                    // F-102
 });
 ```
+
+A body with no parameters is written `body: { text }` with no `format` and no `examples`, and `parameter_format` is then omitted [lib]. (The sketch above shows the parameterized forms.)
 
 **Emitted wire body** (uppercase enums per the reference, C-6; `parameter_format` follows `body.format`):
 
@@ -454,14 +456,16 @@ Nothing below can be checked in this repo: tests use a fake `fetch` and CLAUDE.m
 | V-15 | **F-132** download with `Authorization` works and a missing token fails | `downloadMedia` and a plain `curl` of the URL | Token: 200 binary; no token: failure | Update F-131/F-132 |
 | V-16 | **F-082 + shared secret** one app secret verifies webhooks for every onboarded tenant | Deliver a webhook for a second test WABA | `verifyWebhookSignature` passes with the same secret | Remove the §6.1 multi-tenant comment; document per-tenant secrets |
 | V-17 | Language code form: `en_US` at creation (F-104 guide) vs `en-US` in webhooks (F-117) | Create with `en_US`; read the webhook | Documented mapping holds | Normalize in the parser and note it |
+| V-18 | **C-12** type of `disable_info.disable_date` | Disable a test template and read the event | A number or numeric string, exposed as `disableDate` | Adjust the parser and fixtures |
 
 ## 11. Stop conditions
 
 Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
 - (1) **Hit and resolved:** the Graph Resumable Upload guide has no Markdown page (G-11). Resolved by D-6; it is not needed.
-- (2)/(3) Gaps and conflicts recorded: `G-9`–`G-20`, `C-6`–`C-11`. None blocks the spec; everything that needs a real response is collected in §10 (cannot be done here: stop condition 5).
+- (2)/(3) Gaps and conflicts recorded: `G-9`–`G-20`, `C-6`–`C-12`. None blocks the spec; everything that needs a real response is collected in §10 (cannot be done here: stop condition 5).
 - (4) No existing page hash changed (all 30 v0.1 sources re-fetched and matched before extending excerpts).
-- (5), (6), (7) Not triggered; this branch adds no code (it edits docs, sources and CLAUDE.md only).
+- (4) At implementation time the one page whose excerpt was extended (`tpl-status-webhook`) was re-fetched and its sha256 still matched the manifest.
+- (5), (6), (7) Not triggered. The `check` script now builds and typechecks `examples/` as well (§6); CLAUDE.md's gate line says so.
 
 ---
 

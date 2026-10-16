@@ -23,6 +23,7 @@ The **message_template_status_update** webhook notifies you of changes to the st
             "reason": "<REASON>",
             "message_template_category": "<TEMPLATE_CATEGORY>",
             "disable_info": {
+              "disable_date": "<DISABLE_TIMESTAMP>"
             "other_info": {
             "rejection_info": {
           "field": "message_template_status_update"
@@ -32,6 +33,7 @@ The **message_template_status_update** webhook notifies you of changes to the st
 | `<MESSAGE_TEMPLATE_CATEGORY>`<br><br>_String_ | The template category.<br><br>Values can be:<br><br>`MARKETING` — Indicates template is categorized as MARKETING.<br><br>`UTILITY` — Indicates the template is categorized as UTILITY.<br><br>`AUTHENTICATION` — Indicates template is categorized as AUTHENTICATION. | `MARKETING` |
 | `<REASON_INFO>`<br><br>_String_ | Provides a detailed explanation for why the template was rejected. This field describes the specific issue detected in the template content. | `Your template has parameters placed next to each other (like {{1}}{{2}}) without text or punctuation between them.` |
 | `<RECOMMENDATION_INFO>`<br><br>_String_ | Offers actionable guidance on how to modify the template to resolve the rejection reason. This field suggests best practices for editing the template content. | `Separate parameters with descriptive text and ensure each parameter is clearly contextualized.` |
+| `<DISABLE_TIMESTAMP>`<br><br>_Integer_ | Unix timestamp indicating when the template was disabled. | `1751234563` |
 | `<TEMPLATE_ID>`<br><br>_Integer_ | Template ID. | `1689556908129832` |
             "event": "REJECTED",
             "reason": "INVALID_FORMAT",
