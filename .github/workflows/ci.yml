@@ -45,7 +45,7 @@ jobs:
       - name: Pack public packages and reject workspace protocol
         run: |
           dir="$(mktemp -d)"
-          pnpm -r --filter "!@india-gst-kit/fixtures" pack --pack-destination "$dir"
+          pnpm -r pack --pack-destination "$dir"
           shopt -s nullglob
           tarballs=("$dir"/*.tgz)
           if [ "${#tarballs[@]}" -eq 0 ]; then
