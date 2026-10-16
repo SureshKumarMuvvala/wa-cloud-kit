@@ -41,3 +41,22 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Pack public packages and reject workspace protocol
+        run: |
+          dir="$(mktemp -d)"
+          pnpm -r pack --pack-destination "$dir"
+          shopt -s nullglob
+          tarballs=("$dir"/*.tgz)
+          if [ "${#tarballs[@]}" -eq 0 ]; then
+            echo "::error::No tarballs were packed"
+            exit 1
+          fi
+          status=0
+          for tarball in "${tarballs[@]}"; do
+            if tar -xzOf "$tarball" package/package.json | grep -n 'workspace:'; then
+              echo "::error::$(basename "$tarball") still contains workspace: in package.json"
+              status=1
+            fi
+          done
+          exit "$status"
