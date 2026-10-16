@@ -1,0 +1,18 @@
+{
+  "name": "invoice_with_pdf",
+  "language": "en_US",
+  "category": "UTILITY",
+  "header": { "format": "DOCUMENT", "headerHandle": "REPLACE_WITH_HANDLE_FROM_RESUMABLE_UPLOAD" },
+  "body": {
+    "text": "Hello {{customer_name}}, invoice {{invoice_number}} for {{amount}} is attached and due on {{due_date}}. For any questions contact {{signature}}. Thank you.",
+    "format": "named",
+    "examples": [
+      { "name": "customer_name", "example": "Alex" },
+      { "name": "invoice_number", "example": "INV-0001" },
+      { "name": "amount", "example": "120.00" },
+      { "name": "due_date", "example": "1 December" },
+      { "name": "signature", "example": "Accounts Team | Example Traders" }
+    ]
+  },
+  "footer": { "text": "Invoices from Example Traders" }
+}

@@ -3,10 +3,10 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// Test 43: no token-like strings and no real-looking phone numbers in
-// src/, test/ or docs/. sources/ is exempt (verbatim Meta samples).
+// Tests 43 and 65: no token-like strings and no real-looking phone numbers in
+// src/, test/, docs/ or examples/. sources/ is exempt (verbatim Meta samples).
 const root = fileURLToPath(new URL("..", import.meta.url));
-const SCANNED_DIRS = ["src", "test", "docs"];
+const SCANNED_DIRS = ["src", "test", "docs", "examples"];
 
 // Built from parts so this file does not match its own patterns.
 const TOKEN_PATTERN = new RegExp(["E", "AA", "[A-Za-z0-9]{10,}"].join(""), "g");
@@ -38,6 +38,19 @@ export function findViolations(text: string): string[] {
 describe("repo hygiene", () => {
   it("scans a non-trivial number of files", () => {
     expect(files.length).toBeGreaterThan(3);
+  });
+
+  it("scans examples/ (test 65)", () => {
+    const examples = files
+      .map((file) => relative(root, file))
+      .filter((p) => p.startsWith("examples/"));
+    expect(examples).toEqual(
+      expect.arrayContaining([
+        "examples/README.md",
+        "examples/send-invoice/send-invoice.ts",
+        "examples/webhook-handler/server.ts",
+      ]),
+    );
   });
 
   it("finds no token-like strings or non-fictional phone numbers", () => {

@@ -22,11 +22,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:examples": "tsc -p examples/tsconfig.json --noEmit",
+    "examples:build": "tsc -p examples/tsconfig.json --noEmit false --outDir examples-dist",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "check": "pnpm build && pnpm typecheck && pnpm typecheck:examples && pnpm lint && pnpm test",
     "changeset": "changeset"
   },
   "peerDependencies": {
