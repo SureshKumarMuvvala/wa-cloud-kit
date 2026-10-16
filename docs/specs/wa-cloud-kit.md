@@ -1,6 +1,6 @@
 # wa-cloud-kit — v0.1 specification
 
-**Status:** Draft for review (Step 1). No code exists yet.
+**Status:** Implemented for v0.1 (Step 2). Implementation notes that refine this spec are marked *Impl note*.
 **Package:** `wa-cloud-kit` on npm. MIT, © 2026 Suresh Kumar Muvvala. Public.
 **Facts:** every Meta behaviour below cites an ID in [`docs/facts.md`](../facts.md) (`F-xxx`, conflicts `C-x`, gaps `G-x`). All of them were retrieved on 2026-10-16. A behaviour not marked with an ID is a library design choice and is labelled **[lib]**.
 
@@ -43,7 +43,7 @@ wa-cloud-kit is a small, typed, dependency-free client for the Meta WhatsApp Clo
 | Zod | `peerDependencies.zod: "^4.0.0"`, `devDependencies.zod: "4.5.4"`. Import from `"zod"` (v4 API). |
 | Runtime deps | **None** (the zod peer only) |
 | Tests | Vitest |
-| Lint | ESLint flat config using `typescript-eslint` `strictTypeChecked` (+ `stylisticTypeChecked` optional), with type-aware `parserOptions.projectService` |
+| Lint | ESLint flat config using `typescript-eslint` `strictTypeChecked` (+ `stylisticTypeChecked` optional), with type-aware `parserOptions.projectService`. *Impl note:* the config file is `eslint.config.cjs` (`module.exports`) so the repo has no `export default` anywhere. |
 | Format | Prettier (the lint config defers formatting to Prettier) |
 | Release | Changesets (`.changeset/`). Every user-visible change needs a changeset. |
 | Gate | `pnpm check` = `pnpm typecheck && pnpm lint && pnpm test` |
@@ -54,11 +54,12 @@ Planned layout:
 src/
   index.ts            # re-exports (named)
   config.ts           # WaClientConfig schema
+  client.ts           # createWaClient (Impl note: not in the original layout)
   transport.ts        # request(): URL build, auth header, fetch, error mapping
   errors.ts           # error classes + waErrorCategory
   messages/{text,document,template,common}.ts
   media/upload.ts
-  webhooks/{verify-challenge,verify-signature,parse,schemas}.ts
+  webhooks/{verify-challenge,verify-signature,parse,schemas,constant-time}.ts
   signature/render.ts
 test/ (mirrors src/, plus fixtures/ copied from doc examples with fake IDs)
 docs/  sources/
@@ -205,7 +206,7 @@ UploadMediaResponseSchema = z.looseObject({ id: z.string().min(1) })            
 UploadMediaResult = { mediaId: string }
 ```
 
-- **Size check:** `file.size` must not exceed the documented maximum for the MIME type (F-063: 100 MB for documents, 5 MB for images). A larger file raises `WaValidationError` before any request is sent.
+- **Size check:** `file.size` must not exceed the documented maximum for the MIME type (F-063: 100 MB for documents, 5 MB for images). A larger file raises `WaValidationError` before any request is sent. *Impl note:* the docs do not say whether MB is 10^6 or 2^20 bytes (G-8, open); v0.1 uses 10^6 (100,000,000 and 5,000,000 bytes), the stricter reading.
 - The JSDoc says the media ID expires 30 days after upload (F-062), so callers should upload close to send time.
 - `SUPPORTED_UPLOAD_MIME_TYPES` and `MAX_UPLOAD_BYTES` are exported constants, each annotated with `// F-063`.
 
@@ -273,6 +274,7 @@ export function verifyWebhookChallenge(
 - `ok` requires all of: `hub.mode === "subscribe"` (F-081); `hub.verify_token` equal to `verifyToken`, compared in constant time [lib]; and a non-empty `hub.challenge`.
 - The caller responds `200` with `challenge` as the body. Otherwise they respond with a 4xx (F-080).
 - The challenge is returned exactly as received, as a string (C-2).
+- *Impl note [lib]:* an empty `verifyToken` throws `WaValidationError`, matching the empty-`appSecret` rule in §6.2, so a missing env var can never accept an empty `hub.verify_token`.
 
 ### 6.2 Signature check (F-082, G-4)
 ```ts

@@ -124,3 +124,4 @@ Every API shape, limit, policy, error code and version that wa-cloud-kit relies 
 | G-5 | HTTP status per Cloud API error code | Not given (F-077) | Expose `httpStatus` as received and categorize by `code` only. |
 | G-6 | `https` required for `link` | Not stated. Only "publicly accessible" (F-022) | Validate it as an absolute `http(s)` URL; do not require https. |
 | G-7 | Template-header `id` vs `link` | F-046 shows only `id`; F-047 says `id` or `link` | Accept both. |
+| G-8 | Whether "MB" in the media size table (F-063) means 10^6 or 2^20 bytes | Not stated on any fetched page | **Open — maintainer to confirm.** v0.1 reads MB as 10^6 bytes (100 MB = 100,000,000; 5 MB = 5,000,000), the stricter reading, so the client never accepts a file Meta could reject on size. Added 2026-10-16. |
