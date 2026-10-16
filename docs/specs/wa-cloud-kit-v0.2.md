@@ -1,8 +1,8 @@
 # wa-cloud-kit — v0.2 specification
 
-**Status:** Draft for maintainer review. Spec only: no code changes in this branch.
+**Status:** Draft for maintainer review. Q-1–Q-4 answered 2026-10-16 (D-10–D-13). Spec only: no code changes in this branch.
 **Builds on:** [`wa-cloud-kit.md`](wa-cloud-kit.md) (v0.1, implemented). Section numbers here are independent; v0.1 sections are cited as "v0.1 §n".
-**Facts:** every Meta behaviour cites an ID in [`docs/facts.md`](../facts.md). New IDs in this spec: `F-100`–`F-125` (templates), `F-130`–`F-136` (media), `F-150`–`F-162` (multi-tenant), conflicts `C-6`–`C-11`, gaps `G-9`–`G-19`. All were retrieved on 2026-10-16. A behaviour without an ID is a library choice, labelled **[lib]**.
+**Facts:** every Meta behaviour cites an ID in [`docs/facts.md`](../facts.md). New IDs in this spec: `F-100`–`F-125` (templates), `F-130`–`F-136` (media), `F-150`–`F-162` (multi-tenant), conflicts `C-6`–`C-11`, gaps `G-9`–`G-20`. All were retrieved on 2026-10-16. A behaviour without an ID is a library choice, labelled **[lib]**.
 
 ---
 
@@ -122,7 +122,7 @@ CreateTemplateInput = z.strictObject({
 
 **Not validated client-side** (the API decides): language support, duplicate name+language (F-104), words-to-parameters ratio (`2388293`), policy content (F-049, F-050), the 100-per-hour limit (F-105), the 250/6000 template cap (F-124, C-9).
 
-> **Impact on v0.1 §7.** The v0.1 example body "`… Regards, {{signature}}`" ends with a parameter and would be rejected as a dangling parameter (F-049, `2388299`). The signature variable must sit inside the text and the body must end with static text, as above. The v0.1 text is an example only, but the README/JSDoc should not reuse it. Proposed v0.2 follow-up: tighten the JSDoc on `renderSignatureParameter`.
+> **Impact on v0.1 §7.** The v0.1 example body "`… Regards, {{signature}}`" ends with a parameter and would be rejected as a dangling parameter (F-049, `2388299`). Fixing it is build task **B-1** (§9, D-14).
 
 **Response:** `CreateTemplateResponseSchema = z.looseObject({ id: z.string(), status: z.string(), category: z.string() })` (F-106) → `CreateTemplateResult { templateId, status, category, raw }`.
 - A utility template that contains marketing material is re-categorized (F-050, F-109), so the **returned `category` may not be `UTILITY`**. JSDoc tells callers to check it; the library does not throw [lib].
@@ -276,8 +276,8 @@ export function waErrorCategory(code: number, subcode?: number): WaErrorCategory
 `2388024`, `2388039`, `2388040`, `2388047`, `2388072`, `2388073`, `2388293`, `2388299`.
 
 - They are listed on the error page as codes (F-122), but the template guide describes `2388024` as a **subcode** of code `100` (F-104), and F-071 says subcodes are deprecated and not returned from v16.0 (G-17). So the function matches the identifier against **either** `code` or `subcode`; `WaApiError.category` passes both. If neither matches, the category is the v0.1 code-based one (so a bare `100` stays `parameter`).
-- **Not included:** `132018` (the docs put it under send-time errors, F-123) and `2388019` (listed under "Send template errors", F-122; see Q-1).
-- This is a deliberate exception to "categorize by Graph `code` only" (F-071); CLAUDE.md should be amended to match (Q-2).
+- **Not included:** `132018` (the docs put it under send-time errors, F-123) and `2388019` (Meta files it under "Send template errors", F-122; D-10, G-20).
+- This is a deliberate, narrow exception to "categorize by Graph `code` only" (F-071). CLAUDE.md is amended in this change to say exactly that, and nothing wider (D-11): no other subcode is ever matched.
 - Table-driven tests extend v0.1 test 19.
 
 ---
@@ -315,12 +315,12 @@ Not shipped in the npm package (`files: ["dist"]` is unchanged). Each example is
 ```
 examples/
   README.md                       # how to run, what each shows, the fake-value rule
-  tsconfig.json                   # extends ../tsconfig.json; paths: "wa-cloud-kit" → ../src/index.ts
+  tsconfig.json                   # extends ../tsconfig.json; "wa-cloud-kit" → ../dist (build first, D-13)
   webhook-handler/server.ts       # §6.1
   send-invoice/send-invoice.ts    # §6.2
   send-invoice/invoice-template.json   # the create body from §2.1, for use with createTemplate
 ```
-Run with Node ≥22.18's built-in type stripping (`node server.ts`), no extra tooling [lib]. Whether 22.22.2 runs `.ts` files unflagged and honours the `paths` mapping must be verified when implementing (Q-4); the fallback is `pnpm build` and a relative import of `dist/`. `pnpm check` must lint and typecheck `examples/` (add to `tsconfig.json` `include` and to the ESLint project service), and a test asserts the hygiene scan also covers `examples/`.
+**Build first, import from `dist/` (D-13).** Examples are plain `.ts` files that `import ... from "wa-cloud-kit"`, resolved to the built package output: `examples/tsconfig.json` maps `wa-cloud-kit` to `../dist/index.js` (types from `../dist/index.d.ts`), and `examples/README.md` says to run `pnpm build` first. They are compiled with the same `tsc` toolchain (an `examples:build` step emitting to a git-ignored directory) and run with `node`; no type-stripping flag, no extra tooling. `pnpm check` builds the package, then typechecks and lints `examples/` against `dist/`, so an example cannot drift from the public API; a test asserts the hygiene scan also covers `examples/`.
 
 ### 6.1 Minimal webhook handler (Node, `node:http` only)
 
@@ -399,7 +399,7 @@ Fake values: v0.1 §9 plus WABA `"200000000000002"`, template id `"3000000000000
 51. `getTemplate` with `fields: ["status"]` → `?fields=status`; path-unsafe ids rejected.
 52. `deleteTemplate`: by name; by name+id (`hsm_id`); by ids (`hsm_ids=[…]` JSON, 100 ok, 101 rejected, empty rejected); mixing `name` with `templateIds` rejected; `{success:true}` parses; missing `success` → `WaResponseShapeError`.
 53. Unknown status / reason / category strings parse; `isKnownTemplateStatus` narrows.
-54. A 400 envelope with `error_subcode: 2388299` → `WaApiError.category === "template_creation"`; code `2388040` likewise; `2388024` as subcode of `100` likewise; plain `100` stays `parameter`; `132018` and `2388019` are **not** `template_creation`.
+54. A 400 envelope with `error_subcode: 2388299` → `WaApiError.category === "template_creation"`; code `2388040` likewise; `2388024` as subcode of `100` likewise; plain `100` stays `parameter`; `132018` and `2388019` are **not** `template_creation`; a non-listed subcode (e.g. `2388103`, `33`) never changes the category.
 
 **Media**
 55. `getMediaUrl` hits `GET …/400000000000004?phone_number_id=100000000000001`; response parses; `file_size` string → number; non-https `url` → `WaResponseShapeError`.
@@ -421,27 +421,60 @@ Fake values: v0.1 §9 plus WABA `"200000000000002"`, template id `"3000000000000
 
 ---
 
-## 9. Stop conditions
+## 9. Build tasks beyond the new APIs
+
+**B-1 — remove the dangling-parameter example (D-14).** Meta rejects a template that starts or ends with a parameter (F-049, `2388299`). v0.1 shows exactly that, so:
+1. Edit **v0.1 spec §7** (`wa-cloud-kit.md`, line "for example a body like `… Regards, {{signature}}`") to an example whose body ends in static text, e.g. `… For any questions contact {{signature}}. Thank you.`, with a one-line pointer to F-049.
+2. Audit and fix **README.md** and the JSDoc in `src/signature/render.ts` (`renderSignatureParameter`, `assertTemplateBodyLength`) so no example or comment shows a template body that starts or ends with a parameter. (A search shows none in the README today; the audit confirms it and the new test below keeps it that way.)
+3. Fix the existing fixtures in `test/signature/render.test.ts` that use bodies ending in `{{signature}}` / `{{3}}` (the `Regards, …` strings around lines 108–111 and 170) so they end in static text. Their length arithmetic is updated to match.
+4. **New test:** the documentation example for `renderSignatureParameter` (the example template body in its JSDoc and in README) is extracted and asserted not to start or end with a placeholder (`^\{\{` / `\}\}$` after trimming). A second assertion runs the same check on the §2.1 invoice body used by `createTemplate` tests, so a docs example and the validator cannot disagree.
+5. `assertTemplateBodyLength` stays a length check only; it does not enforce F-049 (that is `createTemplate`'s job, §2.1).
+6. Changeset: patch (docs and test fixtures only).
+
+## 10. Verify on first live call
+
+Nothing below can be checked in this repo: tests use a fake `fetch` and CLAUDE.md forbids a real token (stop condition 5). Each item is run once, by the maintainer, with a real **test** WABA and number, before tagging v0.2.0. Record the outcome in `docs/facts.md` (turn the row into a confirmed fact or a C-row) and fix the code in the same change.
+
+| # | Item | How to check | Pass | If it fails |
+|---|---|---|---|---|
+| V-1 | **C-6** uppercase `category`, `parameter_format`, component `type`/`format` | `createTemplate` with the §2.1 invoice body | `200` with `{id, status: "PENDING", category}` | Switch the emitted enums to lowercase (the guides' form) in one place, update tests and C-6 |
+| V-2 | **C-11** media `DELETE` with no body and no `Content-Type` | `deleteMedia` on an uploaded test file | `{success: true}` | Send `Content-Type: application/json` (and an empty JSON body if needed); update C-11 |
+| V-3 | **G-17** where the `2388xxx` identifier arrives | `createTemplate` with an invalid body (e.g. a body ending in a placeholder, `2388299`) and a duplicate name+language (`2388024`) | `WaApiError.category === "template_creation"` and note whether the value is in `code` or `error_subcode` | If it is in neither field, the category cannot be derived: revert D-7/D-11 and use the message text only as documentation |
+| V-4 | **C-8 / G-18** a caller-supplied `header_handle` is accepted for a DOCUMENT header | `createTemplate` with a handle from the Resumable Upload API (obtained outside the library); also try a handle >60 chars | Accepted | Document the exact handle source; add the length rule if one is enforced |
+| V-5 | **F-107** DOCUMENT header creation shape. Meta's creation examples show IMAGE only; the DOCUMENT form is inferred from "the syntax … is the same for all media types" | Same call as V-4 | Created and later `APPROVED` | Adjust the component shape |
+| V-6 | **G-16** host of the `GET /{media-id}` `url` | `getMediaUrl` then `downloadMedia` on an uploaded PDF | URL hostname is `lookaside.fbsbx.com` | Add the real host to `DEFAULT_MEDIA_HOSTS` with its own F-id (never widen to a wildcard) |
+| V-7 | **F-130** `phone_number_id` check on `GET /{media-id}` and `DELETE` | Request a media id with another number's `phone_number_id` | Meta refuses | Document that tenant isolation relies on token scope only |
+| V-8 | **G-9** `status=` list filter | `listTemplates({status: "approved"})` | Only approved templates | Remove the option or filter client-side |
+| V-9 | **G-10** list `limit` maximum and `fields` handling | `limit` of 100 and 1000; `fields: ["status"]` | Accepted or a clear error | Document the maximum as a new F-id |
+| V-10 | **G-13** error for deleting an unknown name | `deleteTemplate({name: "does_not_exist"})` | A Graph envelope (`WaApiError`) | If it is not an envelope, `WaHttpError` covers it; record the code |
+| V-11 | **G-14** a business token (not a system-user token) can call template and media endpoints | Run V-1…V-10 with an Embedded-Signup business token as well | Same results | Document the required token type per call |
+| V-12 | **F-050 / F-109** invoice wording stays `UTILITY` | Check the returned `category` of V-1; try the exact production invoice text | `UTILITY` | Reword; or if re-categorized, treat as marketing (pricing, F-095/F-096) |
+| V-13 | **F-117 / G-15** `message_template_status_update` delivery, integer `message_template_id`, `entry.time` | Subscribe the app, create then delete a test template | Event arrives at the app's default URL with the documented shape | Adjust the parser and fixtures |
+| V-14 | **F-161** template webhooks ignore a WABA `override_callback_uri` | Set an override on the test WABA, trigger a template event | Event still goes to the app default URL | Update §5/§7.4 |
+| V-15 | **F-132** download with `Authorization` works and a missing token fails | `downloadMedia` and a plain `curl` of the URL | Token: 200 binary; no token: failure | Update F-131/F-132 |
+| V-16 | **F-082 + shared secret** one app secret verifies webhooks for every onboarded tenant | Deliver a webhook for a second test WABA | `verifyWebhookSignature` passes with the same secret | Remove the §6.1 multi-tenant comment; document per-tenant secrets |
+| V-17 | Language code form: `en_US` at creation (F-104 guide) vs `en-US` in webhooks (F-117) | Create with `en_US`; read the webhook | Documented mapping holds | Normalize in the parser and note it |
+
+## 11. Stop conditions
 
 Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
 - (1) **Hit and resolved:** the Graph Resumable Upload guide has no Markdown page (G-11). Resolved by D-6; it is not needed.
-- (2)/(3) Gaps and conflicts recorded: `G-9`–`G-19`, `C-6`–`C-11`. None blocks the spec; **C-6, C-11 and G-17 must be checked against a real response before release**, which cannot happen under stop condition 5 without a real token. They are called out for the maintainer.
+- (2)/(3) Gaps and conflicts recorded: `G-9`–`G-20`, `C-6`–`C-11`. None blocks the spec; everything that needs a real response is collected in §10 (cannot be done here: stop condition 5).
 - (4) No existing page hash changed (all 30 v0.1 sources re-fetched and matched before extending excerpts).
-- (5), (6), (7) Not triggered; this branch adds no code.
+- (5), (6), (7) Not triggered; this branch adds no code (it edits docs, sources and CLAUDE.md only).
 
 ---
 
-## 10. Decisions and open questions
+## 12. Decisions
 
 | ID | Decision | Affects |
 |---|---|---|
 | D-6 | The caller supplies `header_handle`; v0.2 does not wrap the Resumable Upload API (maintainer, 2026-10-16) | §0, §2.1, §6.2, C-8, G-11 |
-| D-7 | New error category `template_creation` for the `2388xxx` template-creation identifiers; matched on `code` or `error_subcode`; `132018` excluded (maintainer, 2026-10-16) | §4, tests 54 |
+| D-7 | New error category `template_creation` for the `2388xxx` template-creation identifiers; matched on `code` or `error_subcode`; `132018` excluded (maintainer, 2026-10-16) | §4, test 54 |
 | D-8 | `downloadMedia` sends the token only to an `https` URL whose hostname is on the allow-list (default: the host shown in Meta's docs, `lookaside.fbsbx.com`, F-133); otherwise `WaValidationError` and nothing is sent; every redirect hop is checked (maintainer, 2026-10-16) | §3.2, tests 56–59 |
-| D-9 | Template status, category, rejection reason and webhook event are strings with exported known-value lists and type guards, never rejecting unknown values *(proposed)* | §2.5, §5, tests 53, 64 |
-
-**Open questions for the maintainer**
-- **Q-1.** `2388019` ("template limit exceeded") is raised when creating a template but is filed under "Send template errors" (F-122). Include it in `template_creation`?
-- **Q-2.** D-7 departs from CLAUDE.md's "categorize by Graph `code` only (F-071)". Amend that line to allow the listed template-creation identifiers on `error_subcode`?
-- **Q-3.** C-6 (uppercase component and category enums) follows the reference, while Meta's create guides show lowercase. Both are likely accepted, but no page says so. OK to ship uppercase and verify with your first real call?
-- **Q-4.** Examples runtime (§6): rely on Node's built-in type stripping, or build first and import from `dist/`?
+| D-9 | Template status, category, rejection reason and webhook event are strings with exported known-value lists and type guards, never rejecting unknown values *(proposed; unchanged)* | §2.5, §5, tests 53, 64 |
+| D-10 | `2388019` stays where Meta files it (send-template errors): it is **not** `template_creation`. Recorded as G-20 (maintainer, 2026-10-16; was Q-1) | §4, G-20, test 54 |
+| D-11 | CLAUDE.md is amended with one narrow exception to "categorize by `code` only": `error_subcode` may be matched only for the documented `2388xxx` template-creation group, citing F-104, F-122, G-17 (maintainer, 2026-10-16; was Q-2). Done in this change | §4, `CLAUDE.md` |
+| D-12 | Ship uppercase enums (C-6) and verify them on the first live call. All unverified items are tracked in §10 (maintainer, 2026-10-16; was Q-3) | §2.1, §10, C-6 |
+| D-13 | Examples build first and import from `dist/` (maintainer, 2026-10-16; was Q-4) | §6 |
+| D-14 | The v0.1 dangling-parameter signature example is fixed as a v0.2 build task (B-1, §9) (maintainer, 2026-10-16) | §9, v0.1 §7 |
