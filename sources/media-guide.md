@@ -48,3 +48,15 @@ Images must be 8-bit, RGB or RGBA.
 Note that mismatched MIME type (`131053`) is a common error. Inspect your media files to verify their MIME type. Make sure that your file name extensions reflect their types. For example, if you are using UNIX, you can inspect a file via the command line to determine its MIME type:
 The maximum supported file size for media messages on Cloud API is 100MB. In the event the customer sends a file that is greater than 100MB, you will receive a webhook with error code [131052](https://developers.facebook.com/documentation/business-messaging/whatsapp/support/error-codes#other-errors) and `title`:
 ```
+
+## Added for v0.2 (retrieved 2026-10-16)
+
+```text
+Use the [Media Download API](https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/media/media-download-api) to [download media](https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/media/media-download-api#get-media-url). Include your access token in the request. **If you omit your token, the request will fail.**
+Note that when retrieving a media from a media ID received via webhook, the media ID will only be available to download for 7 days.
+Upon success, the API will respond with the binary data of the media asset. Response headers contain a content-type header to indicate the MIME type of returned data. Check [supported media types](#supported-media-types) for supported media types.
+If the download attempt fails, you will receive a `404 Not Found` response code. In that case, try to [get a new media URL](#get-media-url) and download it again. If doing so doesn't resolve the issue, renew your access token and attempt to download the media asset again.
+## Delete media {#delete-media}
+Note that `phone_number_id` is optional. If included, the request will only be processed if the business phone number ID included in the query matches the ID of the business phone number that the media was uploaded on.
+Use the [Media Upload API](https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-phone-number/media-upload-api) to [upload media](https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-phone-number/media-upload-api#post-version-phone-number-id-media). Include the parameters listed below. All media files sent through this API are encrypted and persist for 30 days, unless they are deleted earlier.
+```
