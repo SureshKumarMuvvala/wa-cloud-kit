@@ -630,6 +630,15 @@ A minor bump under 0.x because of the new union members (D-42), the new `ParsedW
 
 ---
 
+### 9.1 Implementation notes and deviations (v0.3 build, 2026-10-18)
+
+- **Status reducer (§2.6).** `current` is `WaDeliveryStatus | "unknown"`: `"unknown"` until a known status arrives (the spec had no value for a state built from an unknown status only). `seen` values are `number | null`; `null` records a status seen only with a non-numeric timestamp (rule 4), so the state stays JSON-safe. The state carries an opaque `origins` field holding the `(timestamp, rank)` that `pricing` and `conversation` were taken from (rule 5), so merging stays order-independent. `errors` are sorted by code and `unknownStatuses` alphabetically, for the same reason.
+- **Embedded Signup event (§3.1).** `error_code` and `timestamp` of a user-reported error are accepted as string or number and exposed as strings.
+- **`listPhoneNumbers` (§3.3).** `fields` entries must match `^[a-z_]+$` [lib], so a caller cannot inject `,` or other query syntax.
+- **Router (§2.3).** A `release` that itself fails during the rollback is ignored and the store's original `claim` error is rethrown [lib].
+- **Additional exports** (named, additive): `REPLY_BUTTON_LIMITS`, `LIST_MESSAGE_LIMITS`, the payload and response schemas, `PinSchema`, `KNOWN_INTERACTIVE_REPLY_TYPES`, `PARTNER_ACCOUNT_EVENTS`, `DELIVERY_STATUS_RANK`, `DEFAULT_DEDUPE_TTL_SECONDS`, `buildReplyButtonsMessage`, `buildListMessage`, `buildMarkAsReadPayload`.
+- **Files.** The spec's §9 paths were followed except that client wiring lives in the existing `src/client.ts` / `src/business-client.ts`, and the router's memo and claim logic are both in `src/webhooks/router.ts`.
+
 ## 10. Stop conditions
 
 Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
