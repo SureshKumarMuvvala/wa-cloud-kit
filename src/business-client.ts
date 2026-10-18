@@ -23,6 +23,22 @@ import {
   type ListTemplatesResult,
 } from "./templates/manage.js";
 import { WaTemplateSchema, type WaTemplate } from "./templates/shapes.js";
+import {
+  ListPhoneNumbersInputSchema,
+  ListPhoneNumbersResponseSchema,
+  toListPhoneNumbersResult,
+  type ListPhoneNumbersInput,
+  type ListPhoneNumbersResult,
+} from "./business/phone-numbers.js";
+import {
+  SubscribeAppInputSchema,
+  SubscribedAppsResponseSchema,
+  SubscriptionResponseSchema,
+  toListSubscribedAppsResult,
+  type ListSubscribedAppsResult,
+  type SubscribeAppInput,
+  type SubscriptionResult,
+} from "./business/subscribed-apps.js";
 import { request } from "./transport.js";
 
 /**
@@ -44,6 +60,27 @@ export interface WaBusinessClient {
   getTemplate(input: GetTemplateInput, opts?: RequestOptions): Promise<WaTemplate>;
   /** Deletes templates (F-119). See {@link DeleteTemplateInput} for the cautions (F-120). */
   deleteTemplate(input: DeleteTemplateInput, opts?: RequestOptions): Promise<DeleteTemplateResult>;
+  /**
+   * Lists the WABA's phone numbers (F-206). With the tenant's business token
+   * right after Embedded Signup, a success proves the token can act on this
+   * WABA; `findPhoneNumber` then checks the browser-sent number (D-36).
+   */
+  listPhoneNumbers(
+    input?: ListPhoneNumbersInput,
+    opts?: RequestOptions,
+  ): Promise<ListPhoneNumbersResult>;
+  /**
+   * Subscribes the app to this WABA's webhooks (F-207). A partner must
+   * subscribe to every tenant WABA individually (F-173). With no input, no
+   * body is sent. `override` sets a per-WABA callback URL, which must answer
+   * the verification GET (F-080); template and account webhooks still go to
+   * the app default (F-161).
+   */
+  subscribeApp(input?: SubscribeAppInput, opts?: RequestOptions): Promise<SubscriptionResult>;
+  /** Lists the apps subscribed to this WABA (F-207). */
+  listSubscribedApps(opts?: RequestOptions): Promise<ListSubscribedAppsResult>;
+  /** Unsubscribes the app; this "will immediately stop all webhook deliveries for this WABA" (F-207). */
+  unsubscribeApp(opts?: RequestOptions): Promise<SubscriptionResult>;
 }
 
 /**
@@ -53,6 +90,7 @@ export interface WaBusinessClient {
 export function createWaBusinessClient(config: WaBusinessConfig): WaBusinessClient {
   const resolved = resolveBusinessConfig(config);
   const templatesPath = `${resolved.wabaId}/message_templates`; // F-100
+  const subscribedAppsPath = `${resolved.wabaId}/subscribed_apps`; // F-207
 
   return {
     // `async` turns a synchronous validation throw into a rejection.
@@ -106,6 +144,63 @@ export function createWaBusinessClient(config: WaBusinessConfig): WaBusinessClie
         resolved,
         { method: "DELETE", path: templatesPath, query: deleteTemplateQuery(parsed) },
         DeleteTemplateResponseSchema,
+        opts?.signal,
+      );
+      return { success: response.success, raw: response };
+    },
+    listPhoneNumbers: async (input, opts) => {
+      const parsed = parseInput(ListPhoneNumbersInputSchema, input, "Invalid phone number list");
+      const response = await request(
+        resolved,
+        {
+          method: "GET",
+          path: `${resolved.wabaId}/phone_numbers`, // F-206
+          query: {
+            fields: parsed?.fields?.join(","),
+            limit: parsed?.limit,
+            after: parsed?.after,
+            before: parsed?.before,
+          },
+        },
+        ListPhoneNumbersResponseSchema,
+        opts?.signal,
+      );
+      return toListPhoneNumbersResult(response);
+    },
+    subscribeApp: async (input, opts) => {
+      const parsed = parseInput(SubscribeAppInputSchema, input, "Invalid subscribe request");
+      const override = parsed?.override;
+      const response = await request(
+        resolved,
+        override === undefined
+          ? { method: "POST", path: subscribedAppsPath } // body is optional (F-207)
+          : {
+              method: "POST",
+              path: subscribedAppsPath,
+              json: {
+                override_callback_uri: override.callbackUri,
+                verify_token: override.verifyToken,
+              },
+            },
+        SubscriptionResponseSchema,
+        opts?.signal,
+      );
+      return { success: response.success, raw: response };
+    },
+    listSubscribedApps: async (opts) => {
+      const response = await request(
+        resolved,
+        { method: "GET", path: subscribedAppsPath },
+        SubscribedAppsResponseSchema,
+        opts?.signal,
+      );
+      return toListSubscribedAppsResult(response);
+    },
+    unsubscribeApp: async (opts) => {
+      const response = await request(
+        resolved,
+        { method: "DELETE", path: subscribedAppsPath },
+        SubscriptionResponseSchema,
         opts?.signal,
       );
       return { success: response.success, raw: response };

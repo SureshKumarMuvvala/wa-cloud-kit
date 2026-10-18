@@ -11,3 +11,10 @@ export const TEST_TEMPLATE_ID = "300000000000003";
 export const TEST_MEDIA_ID = "400000000000004";
 export const TEST_HEADER_HANDLE = "test-header-handle";
 export const TEST_MEDIA_HOST = "lookaside.fbsbx.com";
+// v0.3 (spec §6).
+export const TEST_APP_ID = "500000000000005";
+export const TEST_BUSINESS_ID = "600000000000006";
+export const TEST_PARTNER_PORTFOLIO_ID = "700000000000007";
+export const TEST_ES_CODE = "test-es-code";
+export const TEST_BUSINESS_TOKEN = "test-business-token";
+export const TEST_PIN = "123456";

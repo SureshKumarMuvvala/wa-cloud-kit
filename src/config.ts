@@ -60,6 +60,41 @@ export type WaBusinessConfig = z.input<typeof WaBusinessConfigSchema>;
 /** A validated WABA-scoped config. Internal. */
 export type ResolvedBusinessConfig = z.output<typeof WaBusinessConfigSchema>;
 
+/**
+ * App-scoped config for the Embedded Signup code exchange only (v0.3 §1.1,
+ * F-203). The app secret authenticates the exchange; it is never logged or
+ * put into an error, and must never be used client-side (F-203).
+ */
+export const WaAppConfigSchema = z.object({
+  /** App ID, sent as `client_id` (F-203). Digits only [lib]. */
+  appId: z.string().regex(/^\d+$/),
+  /** App secret, sent as `client_secret` (F-203). */
+  appSecret: z.string().min(1),
+  /** Graph API version such as `"v26.0"`; required, no default (F-004, F-005). */
+  graphApiVersion: z.string().regex(/^v\d+\.\d+$/),
+  /** Graph API host (F-203). */
+  baseUrl: z.url().default(DEFAULT_BASE_URL),
+  /** Injected fetch; defaults to `globalThis.fetch`. */
+  fetch: z
+    .custom<typeof globalThis.fetch>((value) => typeof value === "function", {
+      message: "Expected a fetch function",
+    })
+    .optional(),
+});
+export type WaAppConfig = z.input<typeof WaAppConfigSchema>;
+
+/** A validated app config. Internal. */
+export type ResolvedAppConfig = z.output<typeof WaAppConfigSchema>;
+
+/** Validates an app config; throws {@link WaValidationError}. Internal. */
+export function resolveAppConfig(config: WaAppConfig): ResolvedAppConfig {
+  const result = WaAppConfigSchema.safeParse(config);
+  if (!result.success) {
+    throw WaValidationError.fromZod("Invalid WhatsApp app config", result.error);
+  }
+  return result.data;
+}
+
 /** What the transport needs from either scope. Internal. */
 export interface TransportConfig {
   accessToken: string;

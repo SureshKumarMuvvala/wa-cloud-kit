@@ -19,7 +19,14 @@ export type QueryParams = Readonly<Record<string, string | number | undefined>>;
  *   multipart and lets fetch add the boundary (F-060); with neither, no body
  *   and no `Content-Type` are sent.
  * - `parse` defaults to `"json"`; `"none"` ignores a 2xx body and validates
- *   `undefined` against the schema (pass `z.undefined()`).
+ *   `undefined` against the schema (pass `z.undefined()`); `"text"` validates
+ *   the raw 2xx body string and never copies it into an error (v0.3 §1.2).
+ * - `auth` defaults to `"bearer"`; `"none"` sends no `Authorization` header
+ *   (the Embedded Signup code exchange, F-203).
+ *
+ * Errors never carry the request URL, its query or the request body (v0.3
+ * §1.2): the code-exchange URL holds the app secret and the code, and the
+ * register body holds the PIN.
  */
 export interface RequestSpec {
   method: "GET" | "POST" | "DELETE";
@@ -27,7 +34,8 @@ export interface RequestSpec {
   query?: QueryParams;
   json?: unknown;
   form?: FormData;
-  parse?: "json" | "none";
+  parse?: "json" | "none" | "text";
+  auth?: "bearer" | "none";
 }
 
 /** `baseUrl/version/path[?query]`, shared by the JSON transport and the media download. */
@@ -84,7 +92,10 @@ export async function request<S extends z.ZodType>(
   signal?: AbortSignal,
 ): Promise<z.output<S>> {
   const fetchImpl = config.fetch ?? globalThis.fetch;
-  const headers = new Headers({ Authorization: `Bearer ${config.accessToken}` }); // F-002
+  const headers = new Headers();
+  if (spec.auth !== "none") {
+    headers.set("Authorization", `Bearer ${config.accessToken}`); // F-002
+  }
   const init: RequestInit = { method: spec.method, headers };
   if ("json" in spec) {
     headers.set("Content-Type", "application/json"); // F-001
@@ -112,6 +123,16 @@ export async function request<S extends z.ZodType>(
   let value: unknown;
   if (spec.parse === "none") {
     value = undefined;
+  } else if (spec.parse === "text") {
+    const result = schema.safeParse(text);
+    if (!result.success) {
+      // The body may be a secret (a bare token, C-14): keep it out of the error.
+      throw new WaResponseShapeError({
+        issues: [{ code: "custom", message: "Response body has an unexpected shape", path: [] }],
+        raw: undefined,
+      });
+    }
+    return result.data;
   } else {
     const parsed = tryParseJson(text);
     if (!parsed.ok) {

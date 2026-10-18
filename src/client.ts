@@ -30,8 +30,28 @@ import {
   type SendMessageResult,
 } from "./messages/common.js";
 import { buildDocumentMessage, type SendDocumentInput } from "./messages/document.js";
+import {
+  buildListMessage,
+  buildReplyButtonsMessage,
+  type SendListInput,
+  type SendReplyButtonsInput,
+} from "./messages/interactive.js";
+import {
+  MarkAsReadResponseSchema,
+  buildMarkAsReadPayload,
+  type MarkAsReadInput,
+  type MarkAsReadResult,
+} from "./messages/read.js";
 import { buildTemplateMessage, type SendTemplateInput } from "./messages/template.js";
 import { buildTextMessage, type SendTextInput } from "./messages/text.js";
+import {
+  PhoneSuccessResponseSchema,
+  RegisterPhoneNumberInputSchema,
+  SetTwoStepPinInputSchema,
+  type PhoneSuccessResult,
+  type RegisterPhoneNumberInput,
+  type SetTwoStepPinInput,
+} from "./phone/register.js";
 import { request } from "./transport.js";
 
 export interface RequestOptions {
@@ -74,6 +94,41 @@ export interface WaClient {
    * (F-062).
    */
   deleteMedia(input: DeleteMediaInput, opts?: RequestOptions): Promise<DeleteMediaResult>;
+  /**
+   * Interactive reply buttons, up to 3 (F-231). **Customer-service-window
+   * only** (F-233, F-031); outside it the send fails with `131047` (F-033).
+   * The reply arrives as an inbound `interactive` / `button_reply` (F-178).
+   */
+  sendReplyButtons(input: SendReplyButtonsInput, opts?: RequestOptions): Promise<SendMessageResult>;
+  /**
+   * Interactive list, up to 10 sections and 10 rows in total (F-232).
+   * **Customer-service-window only** (F-233, F-031). The reply arrives as an
+   * inbound `interactive` / `list_reply` (F-178).
+   */
+  sendList(input: SendListInput, opts?: RequestOptions): Promise<SendMessageResult>;
+  /**
+   * Marks an inbound message as read, optionally with a typing indicator
+   * (F-234, F-235). Within 30 days of receipt; window rule not stated (G-25).
+   */
+  markAsRead(input: MarkAsReadInput, opts?: RequestOptions): Promise<MarkAsReadResult>;
+  /**
+   * Registers this phone number for Cloud API with a 6-digit PIN (F-208).
+   * If two-step verification is already on, `pin` must be the existing PIN;
+   * otherwise it becomes the PIN (`133005` wrong PIN, `133008` too many
+   * guesses, `133009` too fast; F-211). At most 10 requests per number in 72
+   * hours, then `133016` and a 72-hour block (F-209): record success and do
+   * not repeat it. Register within 14 days of Embedded Signup (F-210). The
+   * PIN is never logged or put into an error.
+   */
+  registerPhoneNumber(
+    input: RegisterPhoneNumberInput,
+    opts?: RequestOptions,
+  ): Promise<PhoneSuccessResult>;
+  /**
+   * Sets the two-step verification PIN (F-212). There is no endpoint to
+   * disable two-step verification (F-212).
+   */
+  setTwoStepPin(input: SetTwoStepPinInput, opts?: RequestOptions): Promise<PhoneSuccessResult>;
 }
 
 /**
@@ -119,6 +174,20 @@ export function createWaClient(config: WaClientConfig): WaClient {
     return downloadMediaFile(resolved, parsed, opts?.signal);
   };
 
+  const postPhone = async (
+    path: string,
+    json: unknown,
+    opts?: RequestOptions,
+  ): Promise<PhoneSuccessResult> => {
+    const response = await request(
+      resolved,
+      { method: "POST", path, json },
+      PhoneSuccessResponseSchema,
+      opts?.signal,
+    );
+    return { success: response.success, raw: response };
+  };
+
   return {
     // Builders validate synchronously; `async` turns their throw into a rejection.
     sendText: async (input, opts) => sendJson(buildTextMessage(input), opts),
@@ -143,6 +212,33 @@ export function createWaClient(config: WaClientConfig): WaClient {
     downloadMediaById: async (input, opts) => {
       const { url } = await getMediaUrl(input, opts);
       return downloadMedia({ url }, opts);
+    },
+    sendReplyButtons: async (input, opts) => sendJson(buildReplyButtonsMessage(input), opts),
+    sendList: async (input, opts) => sendJson(buildListMessage(input), opts),
+    markAsRead: async (input, opts) => {
+      const response = await request(
+        resolved,
+        {
+          method: "POST",
+          path: `${resolved.phoneNumberId}/messages`, // F-234
+          json: buildMarkAsReadPayload(input),
+        },
+        MarkAsReadResponseSchema,
+        opts?.signal,
+      );
+      return { success: response.success, raw: response };
+    },
+    registerPhoneNumber: async (input, opts) => {
+      const parsed = parseInput(RegisterPhoneNumberInputSchema, input, "Invalid register request");
+      return postPhone(
+        `${resolved.phoneNumberId}/register`, // F-208
+        { messaging_product: "whatsapp", pin: parsed.pin },
+        opts,
+      );
+    },
+    setTwoStepPin: async (input, opts) => {
+      const parsed = parseInput(SetTwoStepPinInputSchema, input, "Invalid two-step PIN request");
+      return postPhone(resolved.phoneNumberId, { pin: parsed.pin }, opts); // F-212
     },
     deleteMedia: async (input, opts) => {
       const parsed = parseInput(DeleteMediaInputSchema, input, "Invalid media request");
