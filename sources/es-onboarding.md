@@ -23,3 +23,16 @@ curl 'https://graph.facebook.com/v21.0/<BUSINESS_CUSTOMER_PHONE_NUMBER_ID>/regis
   "pin": "<DESIRED_PIN>"
 | `<DESIRED_PIN>`<br>_String_ | **Required.**<br><br>Set this value to a 6-digit number. This will be the business phone number's two-step verification PIN. | `581063` |
 ```
+
+## Added for v0.3 (re-fetched 2026-10-18; sha256 unchanged)
+
+```text
+If you are a Tech Provider or Tech Partner, any business customer who completes your implementation of the Embedded Signup flow will not be able to use your app to access their WhatsApp assets or send and receive messages (if you are offering messaging services) until you complete these steps.
+## Step 1: Exchange the token code for a business token
+## Step 2: Subscribe to webhooks on the customer's WABA
+## Step 3: Register the customer's phone number
+## Step 4: Send a test message
+## Step 5: Instruct the customer to add a payment method
+<BUSINESS_TOKEN>
+| `<BUSINESS_TOKEN>` | The customer's [business token](https://developers.facebook.com/documentation/business-messaging/whatsapp/access-tokens#business-integration-system-user-access-tokens). | `EAAAN6tcBzAUBOwtDtTfmZCJ9n3FHpSDcDTH86ekf89XnnMZAtaitMUysPDE7LES3CXkA4MmbKCghdQeU1boHr0QZA05SShiILcoUy7ZAb2GE7hrUEpYHKLDuP2sYZCURkZCHGEvEGjScGLHzC4KDm8tq2slt4BsOQE1HHX8DzHahdT51MRDqBw0YaeZByrVFZkVAoVTxXUtuKgDDdrmJQXMnI4jqJYetsZCP1efj5ygGscZBm4OvvuCYB039ZAFlyNn` |
+```

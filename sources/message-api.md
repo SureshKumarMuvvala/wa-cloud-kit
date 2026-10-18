@@ -28,3 +28,17 @@ A media object. Either `id` or `link` is required.
 | id | string |  |  |
 | message_status | One of "accepted", "held_for_quality_assessment", "paused" |  | The status of a WhatsApp message: - `accepted`: The message has been accepted by WhatsApp and is being processed - `held_for_quality_assessment`: The message is being held for quality assessment before delivery - `paused`: The message delivery has been paused |
 ```
+
+## Added for v0.3 (re-fetched 2026-10-18; sha256 unchanged)
+
+```text
+An object with the body of the message. Optional for 'product' type, required for other interactive message types.
+| title | string |  | Title of the section. Required if the message has more than one section. Max 24 characters. |
+| description | string |  | Optional row description. |
+### MarkMessageRequestPayload
+| message_id | string | ✓ |  |
+| status | string | ✓ |  |
+### MarkMessageResponsePayload
+| success | boolean |  |  |
+| action | [ActionObject](#actionobject) | ✓ |  |
+```

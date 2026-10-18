@@ -10,7 +10,8 @@
       "format": "markdown",
       "bytes": 13661,
       "sha256": "55ac95f3f363f325808abe095f85997df7b188cf86441b74f0677823e51a6988",
-      "excerpt": "sources/message-api.md"
+      "excerpt": "sources/message-api.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "send-messages",
@@ -20,7 +21,8 @@
       "format": "markdown",
       "bytes": 17953,
       "sha256": "08420f192277e8188c44710e9d805033b0d756cd26fe4968b5a7b208dd2d6697",
-      "excerpt": "sources/send-messages.md"
+      "excerpt": "sources/send-messages.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "text-messages",
@@ -150,7 +152,8 @@
       "format": "markdown",
       "bytes": 15414,
       "sha256": "8635b1574fe892bd4ee3d98e5e1d30c873760f31267ab2ef4385aba13429501a",
-      "excerpt": "sources/webhooks-overview.md"
+      "excerpt": "sources/webhooks-overview.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "create-webhook-endpoint",
@@ -160,7 +163,8 @@
       "format": "markdown",
       "bytes": 7086,
       "sha256": "9d2189ca896b5278d5ccd5da50e21fd15a96be73fee95236c400c3772f7de03f",
-      "excerpt": "sources/create-webhook-endpoint.md"
+      "excerpt": "sources/create-webhook-endpoint.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "incoming-webhook-payload",
@@ -240,7 +244,8 @@
       "format": "markdown",
       "bytes": 18258,
       "sha256": "fad358ba51ab83a546b438222c84a52f2383873adcfc4fd911de0bec26d8a2d4",
-      "excerpt": "sources/wh-status.md"
+      "excerpt": "sources/wh-status.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "wh-errors",
@@ -400,7 +405,8 @@
       "format": "markdown",
       "bytes": 12984,
       "sha256": "91eae389a4c876b3c6defc0a96be7a1dee562348366817de2e51037f50b6fd31",
-      "excerpt": "sources/es-onboarding.md"
+      "excerpt": "sources/es-onboarding.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "es-implementation",
@@ -410,7 +416,8 @@
       "format": "markdown",
       "bytes": 20828,
       "sha256": "5b7256a2df721b736b15c83e04d08c83d77307aac84cc23c1e4de78d248d36dd",
-      "excerpt": "sources/es-implementation.md"
+      "excerpt": "sources/es-implementation.md",
+      "rechecked": "2026-10-18"
     },
     {
       "slug": "es-versions",
@@ -431,6 +438,186 @@
       "bytes": 9459,
       "sha256": "ee5aae203860e48ac4a9684eee44ae9b4644138940ed19f73cb21f4614a02730",
       "excerpt": "sources/webhook-override.md"
+    },
+    {
+      "slug": "reply-buttons",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-reply-buttons-messages.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 9357,
+      "sha256": "699df9aa72416f151fc990a8429512b676aa67dfcd1910709b7fd0e4aeb82b57",
+      "excerpt": "sources/reply-buttons.md"
+    },
+    {
+      "slug": "list-messages",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-list-messages.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 10222,
+      "sha256": "3c38ac17829f288888376fa7f02fb50e0138a49415030aadaf763a833185280a",
+      "excerpt": "sources/list-messages.md"
+    },
+    {
+      "slug": "mark-read",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/mark-message-as-read.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 3281,
+      "sha256": "f3734f0c0d338761d0ea743339497d0d0f99b92894a99594a0aa5fd2bb761c2d",
+      "excerpt": "sources/mark-read.md"
+    },
+    {
+      "slug": "typing-indicators",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/typing-indicators.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 3120,
+      "sha256": "df5820db626f577e0275e3c15d2789c224e0c277c8b38c9e63149fa1fa8b2c83",
+      "excerpt": "sources/typing-indicators.md"
+    },
+    {
+      "slug": "wh-interactive",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/interactive.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 9778,
+      "sha256": "12ff0de4ff43f229a6bade4a8a89c92ad6b225f3791475b56d303e8a4e5edac3",
+      "excerpt": "sources/wh-interactive.md"
+    },
+    {
+      "slug": "register-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-phone-number/phone-number-registration.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 10019,
+      "sha256": "bf351d95d0692bd53a592789ff0112b5d2240b5d58fb0f9f35ba9e90ad435ad5",
+      "excerpt": "sources/register-api.md"
+    },
+    {
+      "slug": "phone-registration",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/business-phone-numbers/registration.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 9489,
+      "sha256": "bd2b4db866d771a4786b76181904159d3a0d8db3ce39061f9f8b43ca4069a6b6",
+      "excerpt": "sources/phone-registration.md"
+    },
+    {
+      "slug": "two-step-verification",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/business-phone-numbers/two-step-verification.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 2907,
+      "sha256": "7f6f6cd46ac5994bfa9e61c1f12c2b844191c9c4eee90e069a58971a92ae3f12",
+      "excerpt": "sources/two-step-verification.md"
+    },
+    {
+      "slug": "subscribed-apps-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-account/subscribed-apps-api.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 18781,
+      "sha256": "202f3c01c6fb286e822b8c4b575756431548dfd63543376295e08c0577ee9d4c",
+      "excerpt": "sources/subscribed-apps-api.md"
+    },
+    {
+      "slug": "es-errors",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/errors.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 31129,
+      "sha256": "577ebb7bee3897996b3921824675515091e8ecb8e26333d727604bf3dccba910",
+      "excerpt": "sources/es-errors.md"
+    },
+    {
+      "slug": "es-v4",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/version-4.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 8085,
+      "sha256": "3c6f0e48f4fec6caf5949c6077bbc55b967bfd3a63d5f364dda7a961f1e9497a",
+      "excerpt": "sources/es-v4.md"
+    },
+    {
+      "slug": "sp-manage-accounts",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/manage-accounts.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 14442,
+      "sha256": "eca92cdd2794775196d1c61313e31618d72ba08fefa3eb1a7d0d72725cf5c56f",
+      "excerpt": "sources/sp-manage-accounts.md"
+    },
+    {
+      "slug": "sp-manage-phone",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/manage-phone-numbers.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 11403,
+      "sha256": "77b039ed4371efaf7e02bf5b154393faada2dce3171579395269b65a4b592d1e",
+      "excerpt": "sources/sp-manage-phone.md"
+    },
+    {
+      "slug": "sp-manage-webhooks",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/manage-webhooks.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 18766,
+      "sha256": "6cc3b8cd548a3bf9b0412e918c8e2baf09d3dfda401dbbea084be8a54e523c20",
+      "excerpt": "sources/sp-manage-webhooks.md"
+    },
+    {
+      "slug": "phone-numbers-api",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/reference/whatsapp-business-account/phone-number-management-api.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 19918,
+      "sha256": "da4613ec34e20b5618c23d36f7274966c2ae714180d45526c61a4fdab59a093a",
+      "excerpt": "sources/phone-numbers-api.md"
+    },
+    {
+      "slug": "wh-account-update",
+      "url": "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/account_update.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 33612,
+      "sha256": "c2996aad69558b9f06200d6abfcc079bd4179c3111dd35945da04de389926a14",
+      "excerpt": "sources/wh-account-update.md"
+    },
+    {
+      "slug": "fbl-business",
+      "url": "https://developers.facebook.com/documentation/facebook-login/facebook-login-for-business.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 26315,
+      "sha256": "504fd1cef85d338d5d1454f5a306cf819228881a98fbbdfcc2420c61df3e6db9",
+      "excerpt": "sources/fbl-business.md"
+    },
+    {
+      "slug": "fbl-manual-flow",
+      "url": "https://developers.facebook.com/documentation/facebook-login/guides/advanced/manual-flow.md",
+      "retrieved": "2026-10-18",
+      "http_status": 200,
+      "format": "markdown",
+      "bytes": 18301,
+      "sha256": "b1e2eb3539e966c149a19f805a9fce347ccb3e1aa47dde67b2396116bb0ff55a",
+      "excerpt": "sources/fbl-manual-flow.md"
     }
   ]
 }
