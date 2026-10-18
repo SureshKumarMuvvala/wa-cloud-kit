@@ -26,3 +26,9 @@ POST requests are aggregated and sent in a batch with a maximum of 1000 updates.
 If any POST request sent to your server fails, delivery is retried immediately, then a few more times with decreasing frequency over the next 7 days. Your server should handle deduplication in these cases.
 Unacknowledged responses will be dropped after 7 days.
 ```
+
+## Added for v0.3 (re-fetched 2026-10-18; sha256 unchanged)
+
+```text
+There are no APIs for fetching historical webhook data, so capture and store webhook payloads accordingly.
+```

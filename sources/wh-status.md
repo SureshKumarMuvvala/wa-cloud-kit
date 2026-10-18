@@ -39,3 +39,9 @@ Verbatim lines from the page, selected because docs/facts.md cites them. This is
 "status": "failed",
 "timestamp": "1751142888",
 ```
+
+## Added for v0.3 (re-fetched 2026-10-18; sha256 unchanged)
+
+```text
+| `<CONVERSATION_EXPIRATION_TIMESTAMP>`<br><br>_String_ | Unix timestamp indicating when the conversation will expire.<br><br>The expiration_timestamp property is only included for `sent` status. | `1744434060` |
+```

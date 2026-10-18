@@ -16,3 +16,14 @@ We highly recommend that you include both the plus sign and country calling code
 If you are using a link (`link`) to a media asset on your server (as opposed to the ID (`id`) of an asset you have uploaded to the Meta servers), the Cloud API internally caches the asset for 10 minutes. The cached asset is reused in subsequent send message requests if the link in subsequent payloads is the same as the link in the initial payload.
 When sending a series of messages, the order in which messages are delivered is not guaranteed to match the order of your API requests. If you need to ensure the sequence of message delivery, confirm receipt of a `delivered` status in a [status messages](https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/status) webhook before sending the next message in your message sequence.
 ```
+
+## Added for v0.3 (re-fetched 2026-10-18; sha256 unchanged)
+
+```text
+You can send the following types of service messages during an open customer service window.
+[Interactive list messages](https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-list-messages) allow you to present WhatsApp users with a list of options to choose from.
+[Interactive reply buttons](https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-reply-buttons-messages) messages allow you to send up to three predefined replies for users to choose from.
+* All messages except authentication templates: **30 days**.
+If you do not receive a status messages webhook with `status` set to `delivered` before the TTL is exceeded, assume the message was dropped.
+If you send a message that fails (`status` set to `failed`), there could be a minor delay before you receive the webhook, so you may wish to build in a small buffer before assuming the message was dropped.
+```
