@@ -78,8 +78,43 @@ const UnsupportedMessageSchema = z.looseObject({
   errors: z.array(WebhookErrorSchema),
 });
 
-/** Message types mapped by v0.1. */
-export const KNOWN_MESSAGE_TYPES = ["text", "document", "image", "button", "unsupported"] as const;
+/**
+ * Reply to an interactive message (F-178): `button_reply` for reply buttons,
+ * `list_reply` for lists. `context.id` is the business message that held the
+ * buttons or list. Other `interactive.type` values (Flow replies, …) are not
+ * matched here and become `type: "other"` [lib].
+ */
+const InteractiveMessageSchema = z.looseObject({
+  ...MessageCommonShape,
+  type: z.literal("interactive"),
+  interactive: z.discriminatedUnion("type", [
+    z.looseObject({
+      type: z.literal("button_reply"),
+      button_reply: z.looseObject({ id: z.string(), title: z.string() }),
+    }),
+    z.looseObject({
+      type: z.literal("list_reply"),
+      list_reply: z.looseObject({
+        id: z.string(),
+        title: z.string(),
+        description: z.string().optional(),
+      }),
+    }),
+  ]),
+});
+
+/** `interactive.type` values mapped by v0.3 (F-178). */
+export const KNOWN_INTERACTIVE_REPLY_TYPES = ["button_reply", "list_reply"] as const;
+
+/** Message types mapped by v0.1–v0.3. */
+export const KNOWN_MESSAGE_TYPES = [
+  "text",
+  "document",
+  "image",
+  "button",
+  "unsupported",
+  "interactive",
+] as const;
 
 export const KnownMessageSchema = z.discriminatedUnion("type", [
   TextMessageSchema,
@@ -87,6 +122,7 @@ export const KnownMessageSchema = z.discriminatedUnion("type", [
   ImageMessageSchema,
   ButtonMessageSchema,
   UnsupportedMessageSchema,
+  InteractiveMessageSchema,
 ]);
 
 /** Any other message type, kept raw for forward compatibility [lib]. */
@@ -202,6 +238,30 @@ export const TemplateStatusValueSchema = z.looseObject({
   other_info: z.looseObject({ title: z.string(), description: z.string().optional() }).optional(),
   rejection_info: z
     .looseObject({ reason: z.string(), recommendation: z.string().optional() })
+    .optional(),
+});
+
+/** `account_update` partner events (F-174). Other `event` values are passed through. */
+export const PARTNER_ACCOUNT_EVENTS = [
+  "PARTNER_ADDED",
+  "PARTNER_APP_INSTALLED",
+  "PARTNER_APP_UNINSTALLED",
+  "PARTNER_REMOVED",
+  "PARTNER_CLIENT_CERTIFICATION_STATUS_UPDATE",
+] as const; // F-174
+
+/**
+ * `value` of an `account_update` change (F-174). `waba_info` is present on
+ * `PARTNER_*` events; its `waba_id` is the tenant WABA (C-13, D-32).
+ */
+export const AccountUpdateValueSchema = z.looseObject({
+  event: z.string(),
+  waba_info: z
+    .looseObject({
+      waba_id: z.string().optional(),
+      owner_business_id: z.string().optional(),
+      partner_app_id: z.string().optional(),
+    })
     .optional(),
 });
 

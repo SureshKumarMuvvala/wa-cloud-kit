@@ -1,6 +1,6 @@
 # wa-cloud-kit — v0.3 specification
 
-**Status:** Phase 1, spec only. No package code yet. Decisions D-30–D-45 (§12) are **proposals awaiting the maintainer**; conflicts C-13, C-14, C-15 and C-21 are open and block the parts of the code that depend on them.
+**Status:** Implemented on branch `track-wa/v0.3-build` (minor release). Decisions D-30–D-45 (§12) accepted as recommended by the maintainer on 2026-10-18; open points C-13, C-14, C-15, C-21, G-22, G-23 and G-26 answered the same day (§12 note). Items that need Meta's live API are in §7 and must be run before tagging v0.3.0.
 **Builds on:** [`wa-cloud-kit.md`](wa-cloud-kit.md) (v0.1) and [`wa-cloud-kit-v0.2.md`](wa-cloud-kit-v0.2.md) (v0.2), both implemented. Their sections are cited as "v0.1 §n" and "v0.2 §n".
 **Facts:** every Meta behaviour cites an ID in [`docs/facts.md`](../facts.md). New IDs in this spec: `F-170`–`F-178` (webhooks), `F-200`–`F-214` (Embedded Signup), `F-230`–`F-235` (interactive, read receipts), conflicts `C-13`–`C-22`, gaps `G-21`–`G-27`. All were retrieved on 2026-10-18. Every page already in `sources/` that this spec cites again was re-fetched the same day and its sha256 still matched the manifest. A behaviour without an ID is a library choice, labelled **[lib]**.
 
@@ -309,7 +309,7 @@ export type WaBusinessTokenResult = {
 ```
 
 - Query: `client_id`, `client_secret`, `code`, and `redirect_uri` only when `redirectUri` is given (C-15, D-35). `auth: "none"` (§1.2).
-- **Response (C-14, D-35, proposed):** parse as JSON with `z.looseObject({ access_token: z.string().min(1), token_type: z.string().optional(), expires_in: z.number().optional() })` (the documented JSON form, F-203). If the 2xx body is not JSON, accept it as the token only if it is a single non-empty line without whitespace (the Tech Provider page's bare `<BUSINESS_TOKEN>`, F-203). Anything else → `WaResponseShapeError` whose message names the problem but **never** includes the body.
+- **Response (C-14, D-35; maintainer 2026-10-18):** parse as JSON with `z.looseObject({ access_token: z.string().min(1), token_type: z.string().optional(), expires_in: z.number().optional() })` (the documented JSON form, F-203). If the 2xx body is not JSON, accept it as the token only if it is a single non-empty line without whitespace (the Tech Provider page's bare `<BUSINESS_TOKEN>`, F-203). Anything else → `WaResponseShapeError` whose message names the problem but **never** includes the body.
 - Errors → `WaApiError` / `WaHttpError` as usual. The error for an expired or reused code is not documented (G-27); no special category.
 - JSDoc: call this **immediately** on receiving the code (30-second TTL, F-202); a retry after that cannot succeed; never call it from the browser (F-202, F-203; es-onboarding "Do not use client-side requests").
 - The secret, code and token never appear in an error, a log line or `raw` (§3.8, test 92). The result has no `raw` field [lib].
@@ -584,19 +584,20 @@ Continues v0.2 §10 (V-1–V-18). Run once by the maintainer with a real **test*
 
 | # | Item | How to check | Pass | If it fails |
 |---|---|---|---|---|
-| V-19 | **C-14 / C-15 / G-27** code-exchange request and response | Complete Embedded Signup with a test business; exchange the code with and without `redirect_uri`; exchange it again after 30 s | JSON with `access_token`; note `token_type`/`expires_in`; record the error code for the stale code | Adjust D-35 parsing; add the stale-code error as a fact |
+| V-19 | **C-14 / G-27** which response form the live code exchange returns | Complete Embedded Signup with a test business; exchange the code; record the raw 2xx body shape (JSON `{access_token, …}` or a bare token); exchange it again after 30 s | Record the form; note `token_type`/`expires_in`; record the error code for the stale code | Keep both parsers (D-35) but record which one is used; add the stale-code error as a fact |
 | V-20 | **C-16** token lifetime | Check `expires_in` from V-19; call `debug_token` once by hand for `expires_at` | Recorded | Document the real lifetime; the `190` rule stays |
 | V-21 | **C-13** `account_update` `entry.id` | Onboard a test tenant; capture `PARTNER_ADDED` / `PARTNER_APP_INSTALLED` | `waba_info.waba_id` is the tenant WABA; record what `entry.id` is | If `entry.id` is the WABA and `waba_info` absent, the fallback already covers it; update C-13 |
 | V-22 | **C-22** number state before `register`, register response | Register right after the flow | `{ success: true }` | Record the required state |
 | V-23 | **G-24** reply-button text header length | Send headers of 60 and 61 characters | Record any limit | Add the limit with a new F-id |
-| V-24 | **G-26** ids stable across redelivery | Return `500` once for a test message webhook; compare the retried payload | Same `messages[].id` / `statuses[].id` | Change the dedupe keys (D-31) |
-| V-25 | **G-22 / G-23** status arrival order | Send to a test device; log arrival order of `sent`/`delivered`/`read`; send to an invalid number for `failed` | Reducer state matches the device | Revisit D-34 ranks |
+| V-24 | **G-26** which ids stay the same across retries | Return `500` once for a test message webhook; compare the retried payload | Same `messages[].id` / `statuses[].id` | Change the dedupe keys (D-31) |
+| V-25 | **G-22 / G-23** observed status arrival order | Send to a test device; log arrival order of `sent`/`delivered`/`read`; send to an invalid number for `failed` | Reducer state matches the device | Revisit D-34 ranks |
 | V-26 | **F-207** `subscribed_apps` with no body; repeat subscribe | `subscribeApp()` twice; `listSubscribedApps()` | `{ success: true }` both times; app listed once | Document the second-call behaviour |
 | V-27 | **C-21** one-section list without a title | Send it | Record accepted or rejected | If accepted, D-41 may relax to "required when > 1 section" |
 | V-28 | **G-25** mark-as-read / typing outside the window | Mark a message older than 24 h but newer than 30 days as read | Record | Document as window-only if refused |
 | V-29 | **C-18** `phone_numbers` fields | `listPhoneNumbers()` with default fields | Record which fields arrive | Adjust the optional fields |
 | V-30 | **F-174 / F-204** revocation | Remove the app from the test business's Connected apps | `PARTNER_APP_UNINSTALLED` arrives; the token then fails with `190` | Update §3.8 |
 | V-31 | **F-161** `account_update` ignores a WABA override | With an override set (V-14), trigger `PARTNER_APP_INSTALLED` | Arrives at the app default URL | Update §2.5 |
+| V-32 | **C-15** `redirect_uri` on the code exchange | Exchange one fresh code without `redirect_uri` and one with the page's URL | Record which is accepted | If it is required, document that callers must pass `redirectUri`; the parameter stays optional in code |
 
 ---
 
@@ -629,11 +630,20 @@ A minor bump under 0.x because of the new union members (D-42), the new `ParsedW
 
 ---
 
+### 9.1 Implementation notes and deviations (v0.3 build, 2026-10-18)
+
+- **Status reducer (§2.6).** `current` is `WaDeliveryStatus | "unknown"`: `"unknown"` until a known status arrives (the spec had no value for a state built from an unknown status only). `seen` values are `number | null`; `null` records a status seen only with a non-numeric timestamp (rule 4), so the state stays JSON-safe. The state carries an opaque `origins` field holding the `(timestamp, rank)` that `pricing` and `conversation` were taken from (rule 5), so merging stays order-independent. `errors` are sorted by code and `unknownStatuses` alphabetically, for the same reason.
+- **Embedded Signup event (§3.1).** `error_code` and `timestamp` of a user-reported error are accepted as string or number and exposed as strings.
+- **`listPhoneNumbers` (§3.3).** `fields` entries must match `^[a-z_]+$` [lib], so a caller cannot inject `,` or other query syntax.
+- **Router (§2.3).** A `release` that itself fails during the rollback is ignored and the store's original `claim` error is rethrown [lib].
+- **Additional exports** (named, additive): `REPLY_BUTTON_LIMITS`, `LIST_MESSAGE_LIMITS`, the payload and response schemas, `PinSchema`, `KNOWN_INTERACTIVE_REPLY_TYPES`, `PARTNER_ACCOUNT_EVENTS`, `DELIVERY_STATUS_RANK`, `DEFAULT_DEDUPE_TTL_SECONDS`, `buildReplyButtonsMessage`, `buildListMessage`, `buildMarkAsReadPayload`.
+- **Files.** The spec's §9 paths were followed except that client wiring lives in the existing `src/client.ts` / `src/business-client.ts`, and the router's memo and claim logic are both in `src/webhooks/router.ts`.
+
 ## 10. Stop conditions
 
 Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
 - (1) **Not hit.** Every page needed was reachable as raw Markdown, including two Facebook Login pages outside the WhatsApp tree (`documentation/facebook-login/…md`). The only HTML page touched is the Graph Webhooks page, re-read for a response timeout (none found, G-21); no new fact cites it.
-- (2) **Hit:** gaps G-21–G-27 recorded with proposed handling. G-22/G-23 (status order) and G-26 (dedupe keys) shape code; D-31 and D-34 need a maintainer answer.
+- (2) **Hit and resolved:** gaps G-21–G-27 recorded. G-22/G-23/G-26 answered by the maintainer (2026-10-18): no extra design; the reducer is order-independent (D-34) and dedupe uses the D-31 keys; V-24 and V-25 confirm on a live call.
 - (3) **Hit:** conflicts C-13–C-22 recorded. **C-13** (routing of `account_update`), **C-14/C-15** (code-exchange response and `redirect_uri`) and **C-21** (list section title) change code; D-32, D-35 and D-41 need a maintainer answer before Phase 2.
 - (4) Not hit: all 15 previously stored pages that v0.3 cites again were re-fetched on 2026-10-18 and their sha256 matched the manifest.
 - (5) Not hit by the spec. Everything that needs a real app, token or number is in §7.
@@ -649,16 +659,16 @@ Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
 
 ---
 
-## 12. Decisions (proposed — maintainer to confirm)
+## 12. Decisions (accepted as recommended — maintainer, 2026-10-18)
 
-| ID | Proposal | Recommendation | Affects |
+| ID | Decision | Rationale | Affects |
 |---|---|---|---|
 | D-30 | Resolver takes one key object `{ field, wabaId, phoneNumberId?, source }` and returns a tenant or `null`; the library does no cross-checking itself | **Yes.** One function keeps the API small; the README shows the phone-first lookup with a WABA check | §2.3, tests 70–73 |
 | D-31 | Dedupe keys per §2.4 (message id; status id + value; template and account composites; errors never deduped); store interface `claim`/`release?`; default TTL 691 200 s (7 days + 1) | **Yes.** Based on F-083/F-170; ids unverified (G-26, V-24) | §2.4, tests 75–78 |
 | D-32 | `account_update` routes by `waba_info.waba_id`, falling back to `entry.id` | **Yes.** All partner examples show `entry.id` as a constant non-tenant id (C-13) | §2.1 b, §2.2, test 68 |
 | D-33 | `ParsedWebhook.unhandled` lists unmodelled changes; the router routes them into `unhandled` or `unrouted` | **Yes.** Meets "never thrown away silently"; `skippedChanges` stays for compatibility | §2.1 c, test 69 |
 | D-34 | Reducer ranks sent < delivered < read < played; `failed` beats only `sent`; conflicts kept as anomalies; order-independent | **Yes.** Derived from F-176; the docs give no arrival order (G-22, G-23) | §2.6, tests 79–85 |
-| D-35 | Code exchange: optional `redirectUri`; parse JSON `access_token`, else accept a single-line bare token; never echo the body | **Yes**, until V-19 shows one form | §3.2, tests 87–88 |
+| D-35 | Code exchange: optional `redirectUri`, sent only when the caller supplies it (C-15); parse JSON `access_token` first, else accept a single-line bare token (C-14); never echo the body | **Yes**; V-19 records the live form, V-32 the `redirect_uri` behaviour | §3.2, tests 87–88 |
 | D-36 | Confirm the WABA and number with `GET /{waba}/phone_numbers` using the business token; do not wrap `debug_token` | **Yes.** Keeps tokens out of URLs and needs no second secret (C-17) | §3.3, test 89 |
 | D-37 | Single-call functions only; no onboarding orchestrator; README gives the order exchange → confirm → subscribe → register | **Yes.** Progress is state (CLAUDE.md); order per F-213 (C-20) | §3.7 |
 | D-38 | Include `setTwoStepPin` (`POST /{phone-number-id}` `{pin}`) | **Yes**, small and documented (F-212) | §3.6, test 91 |
@@ -669,3 +679,5 @@ Unchanged from v0.1 §10 / CLAUDE.md. Status for this spec:
 | D-43 | Unrouted items are not claimed in the idempotency store | **Yes.** A redelivery after the tenant is added is processed | §2.3 rule 3, test 72 |
 | D-44 | `subscribeApp` accepts an optional `override { callbackUri, verifyToken }` (https, ≤ 200 chars) | **Yes.** Per-tenant callback URLs are a documented partner pattern (F-161) | §3.4, test 90 |
 | D-45 | Include `listSubscribedApps` and `unsubscribeApp` | **Yes.** Confirmation and tenant offboarding | §3.4, test 90 |
+
+**Maintainer answers (2026-10-18).** C-14: accept both forms, JSON first, bare token as fallback (D-35), confirmed by V-19. C-15: `redirectUri` optional and sent only when supplied, confirmed by V-32. C-21: always require section titles (D-41), valid under both readings. G-22/G-23/G-26: no extra design; V-24 and V-25 record live behaviour. C-17–C-20, C-22: kept as recorded.

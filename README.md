@@ -6,13 +6,16 @@ A small, typed, stateless TypeScript client for the Meta WhatsApp Cloud API.
 - **Upload media** (documents, JPEG, PNG).
 - **Manage templates** (v0.2): create a utility template with a DOCUMENT header, list, get status, delete.
 - **Read, download and delete media** (v0.2), with the token sent only to an allow-listed host.
-- **Webhooks**: verification handshake, `X-Hub-Signature-256` check, and parsing into flat message/status/error/template-status events.
+- **Webhooks**: verification handshake, `X-Hub-Signature-256` check, and parsing into flat message/status/error/template-status/account-update events.
+- **Multi-tenant webhook router** (v0.3): your tenant resolver, your idempotency store; unknown tenants are reported, never dropped. A pure **status reducer** that tolerates any arrival order.
+- **Embedded Signup, server side** (v0.3): exchange the code, confirm the number, subscribe the app, register the number.
+- **Interactive** reply buttons and lists, **mark as read** with an optional typing indicator (v0.3).
 - A helper that renders a tenant's **signature** into a template variable.
 - Transport through an injectable `fetch`; typed errors built from the Graph API error format.
 
 ESM only, Node ≥ 22 or any runtime with `fetch` and WebCrypto. The only dependency is the `zod@^4` peer.
 
-The library keeps **no state**: every client is built from one tenant's config, so a multi-tenant app can create one client per request or per tenant.
+The library keeps **no state**: every client is built from one tenant's config, so a multi-tenant app can create one client per request or per tenant. Anything that needs memory (the tenant table, the dedupe store, a message's delivery state, tokens) is passed in by you or returned to you.
 
 ```sh
 pnpm add wa-cloud-kit zod
@@ -138,7 +141,7 @@ All errors extend `WaError`:
 | `WaHttpError`          | Non-2xx without the envelope (HTML, empty, other JSON).                                                 |
 | `WaResponseShapeError` | 2xx with an unexpected body.                                                                            |
 
-`category` is derived from the Graph `code` (`waErrorCategory(code, subcode?)`), never from the HTTP status. The one exception is `"template_creation"`: the documented template-creation identifiers (`2388024`, `2388039`, `2388040`, `2388047`, `2388072`, `2388073`, `2388293`, `2388299`; F-104, F-122) are matched in either `code` or `error_subcode`, and no other subcode is ever read. The access token never appears in an error.
+`category` is derived from the Graph `code` (`waErrorCategory(code, subcode?)`), never from the HTTP status. The one exception is `"template_creation"`: the documented template-creation identifiers (`2388024`, `2388039`, `2388040`, `2388047`, `2388072`, `2388073`, `2388293`, `2388299`; F-104, F-122) are matched in either `code` or `error_subcode`, and no other subcode is ever read. The access token never appears in an error, and neither do the app secret, the Embedded Signup code, the two-step PIN or a request URL.
 
 ## Webhooks
 
@@ -179,9 +182,157 @@ Unknown message types arrive as `{ type: "other", originalType, raw }`. Unknown 
 - The payload has no unique id. Dedupe on `wabaId:templateId:event:eventTime`; retries can duplicate deliveries (F-083, F-084).
 - `kind: "template_status"` is a new member of `WaWebhookEvent`, so an exhaustive `switch` needs a new case when you upgrade.
 
+### Routing webhooks to tenants (v0.3)
+
+Verify and parse as above, persist the raw body, answer `200`, then route in a worker:
+
+```ts
+import { createWebhookRouter, type WaIdempotencyStore } from "wa-cloud-kit";
+
+const idempotency: WaIdempotencyStore = {
+  // Must be atomic across all instances, e.g. Redis: SET key 1 NX EX ttl
+  claim: async (key, ttlSeconds) =>
+    (await redis.set(key, "1", { NX: true, EX: ttlSeconds })) === "OK",
+  release: async (key) => void (await redis.del(key)),
+};
+
+const router = createWebhookRouter({
+  // Phone number first; when both are present, check the tenant owns the WABA.
+  resolveTenant: async ({ phoneNumberId, wabaId }) =>
+    phoneNumberId !== undefined
+      ? db.tenantByPhone(phoneNumberId, { wabaId })
+      : db.tenantByWaba(wabaId),
+  idempotency,
+});
+
+const { routed, duplicates, unrouted, unhandled } = await router.route(parseWebhookPayload(body));
+```
+
+- Every event lands in exactly one list. `unrouted` holds items whose tenant you don't know (`reason: "unknown_tenant"`); they are **not** marked as seen, so a redelivery after you add the tenant is processed. Store or alert on them.
+- `unhandled` holds changes the parser does not model (for example `phone_number_quality_update`), routed to a tenant, with the raw `value`.
+- Routing keys: `messages` changes carry `phoneNumberId` and `wabaId`; `message_template_status_update` and `account_update` carry only `wabaId` and always arrive at the app's default callback URL (F-161). For `account_update` partner events the tenant WABA is `waba_info.waba_id`, not `entry.id` (C-13).
+- Dedupe keys (`webhookDedupeKey`): message id; status id + status value; a composite for template and account events; `value.errors` are never deduped. Default TTL is 8 days: Meta retries for up to 7 days and sends retries to every subscribed app (F-083, F-170). If processing fails after `route()`, call `release(dedupeKey)` to allow reprocessing.
+- If `claim` throws, `route()` releases what it claimed in that call and rejects; a resolver that throws rejects before anything is claimed.
+- Meta documents **no response timeout** (G-21). Answer fast because anything other than `200` is retried for up to 7 days, and there is no API to fetch past webhooks (F-171), so persist the body before answering.
+
+### Delivery status (v0.3)
+
+```ts
+import { reduceMessageStatus } from "wa-cloud-kit";
+
+const next = reduceMessageStatus(invoice.deliveryState, event.status); // pure; store `next`
+```
+
+`current` is the highest status seen (sent < delivered < read < played). `failed` beats `sent` only; if `delivered`/`read` was also seen, the positive status wins and the conflict is kept in `anomalies`. Any arrival order of the same updates gives the same state, and a repeated update changes nothing. `pricing` and `conversation` are passed through. Meta's rule for dropped messages: no `delivered` within the TTL (30 days for non-authentication messages) means dropped; a `failed` can arrive after a short delay (F-177).
+
+### Account updates (v0.3)
+
+`account_update` changes arrive as `{ kind: "account_update", wabaId, entryId, event, ownerBusinessId?, partnerAppId?, raw }`. `PARTNER_ADDED` is sent when a client completes Embedded Signup; `PARTNER_APP_UNINSTALLED` means the client removed your app, so their token no longer works (F-174, F-204).
+
+## Embedded Signup, server side (v0.3)
+
+The browser part (Facebook JS SDK, `FB.login`) is yours. Post the code and the session event to your server at once: **the code lives 30 seconds** (F-202). Then, server-to-server:
+
+```ts
+import {
+  createWaBusinessClient,
+  createWaClient,
+  exchangeEmbeddedSignupCode,
+  findPhoneNumber,
+  parseEmbeddedSignupEvent,
+} from "wa-cloud-kit";
+
+const event = parseEmbeddedSignupEvent(body.event); // untrusted browser input
+if (event.kind !== "finish") return; // cancel / error_report / flow_error
+
+// 1. Exchange the code (no Authorization header; app id + secret in the query).
+const { accessToken } = await exchangeEmbeddedSignupCode(
+  { appId: process.env.WA_APP_ID, appSecret: process.env.WA_APP_SECRET, graphApiVersion: "v26.0" },
+  { code: body.code },
+);
+await tenants.saveToken(tenantId, accessToken); // encrypt at rest; never log it
+
+// 2. Confirm the WABA and number with the tenant's own token.
+const business = createWaBusinessClient({
+  wabaId: event.wabaId,
+  accessToken,
+  graphApiVersion: "v26.0",
+});
+const numbers = await business.listPhoneNumbers();
+if (event.phoneNumberId && !findPhoneNumber(numbers, event.phoneNumberId))
+  throw new Error("mismatch");
+
+// 3. Subscribe your app to the tenant's WABA webhooks.
+await business.subscribeApp();
+
+// 4. Register the number with a 6-digit two-step PIN (skip for FINISH_ONLY_WABA).
+if (event.phoneNumberId) {
+  const phone = createWaClient({
+    phoneNumberId: event.phoneNumberId,
+    accessToken,
+    graphApiVersion: "v26.0",
+  });
+  await phone.registerPhoneNumber({ pin });
+}
+// 5. The tenant adds a payment method in WhatsApp Manager before sending (F-160).
+```
+
+Each function is one Graph call; which steps succeeded is your state. Also available: `listSubscribedApps()`, `unsubscribeApp()` (stops all webhook deliveries for the WABA), `subscribeApp({ override: { callbackUri, verifyToken } })` for a per-tenant callback URL, and `setTwoStepPin({ pin })`.
+
+| Situation                                    | What you get                          | Source       |
+| -------------------------------------------- | ------------------------------------- | ------------ |
+| Code older than 30 s or reused               | `WaApiError` (code not documented)    | F-202, G-27  |
+| Token revoked or invalid                     | `WaApiError` code `190` → re-onboard  | F-073, F-204 |
+| No Advanced access / WABA not visible        | `WaApiError` code `200`               | F-154        |
+| Wrong PIN / too many guesses / too fast      | `133005` / `133008` / `133009`        | F-211        |
+| More than 10 register calls in 72 h          | `133016` (`throttling`), blocked 72 h | F-209        |
+| Number not verified / recently deleted       | `133006` / `133015`                   | F-211        |
+| Registering more than 14 days after the flow | `WaApiError`; run the flow again      | F-210        |
+| Sending before a payment method exists       | `131042`                              | F-160, F-211 |
+
+**Tokens.** The business token is returned to you and never stored, logged or put into an error by the library; neither are the app secret, the code or the PIN. Business tokens "default to never expire", but a configuration can make them expire in 60 days (F-204, C-16): use `expiresIn` when Meta sends it and treat `190` as "re-onboard". Onboarding limits: 10 new customers per rolling 7 days, 200 after verification and App Review (F-159).
+
+## Interactive messages and read receipts (v0.3)
+
+```ts
+await client.sendReplyButtons({
+  to: "+15550000001",
+  body: "Invoice INV-0001 is ready. Do you want the PDF here?",
+  buttons: [
+    { id: "send-pdf", title: "Send PDF" },
+    { id: "later", title: "Later" },
+  ],
+});
+
+await client.sendList({
+  to: "+15550000001",
+  body: "How would you like to pay?",
+  buttonText: "Payment options",
+  sections: [
+    {
+      title: "Now",
+      rows: [
+        { id: "card", title: "Card" },
+        { id: "bank", title: "Bank transfer" },
+      ],
+    },
+  ],
+});
+
+await client.markAsRead({ messageId: inbound.id, typingIndicator: true });
+```
+
+| Call               | Limits                                                                                                                                                                                 | Customer service window                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `sendReplyButtons` | 1–3 buttons; id ≤ 256, title ≤ 20, both unique; body ≤ 1024; footer ≤ 60; header text, document, image or video (F-231)                                                                | **Required** (F-233); outside it → `131047` |
+| `sendList`         | ≤ 10 sections, ≤ 10 rows in total; section title ≤ 24 (always required); row id ≤ 200 (unique), title ≤ 24, description ≤ 72; button ≤ 20; body ≤ 4096; header and footer ≤ 60 (F-232) | **Required** (F-233); outside it → `131047` |
+| `markAsRead`       | Within 30 days of receipt; marks earlier messages too; typing indicator lasts up to 25 s (F-234, F-235)                                                                                | Not stated (G-25)                           |
+
+Replies arrive as inbound messages `{ type: "interactive", interactive: { type: "button_reply", button_reply: { id, title } } }` or `list_reply` with `{ id, title, description? }` (F-178). Lengths count UTF-16 code units.
+
 ## Examples
 
-[`examples/`](examples) has a minimal `node:http` webhook handler and a "send invoice PDF" script. They import the built package, so run `pnpm build` first; see [`examples/README.md`](examples/README.md).
+[`examples/`](examples) has a multi-tenant `node:http` webhook handler, an Embedded Signup onboarding script and a "send invoice PDF" script. They import the built package, so run `pnpm build` first; see [`examples/README.md`](examples/README.md).
 
 ## Pricing note
 
@@ -189,7 +340,7 @@ Meta's pricing pages currently disagree on whether service (non-template) messag
 
 ## Facts
 
-Every Meta behaviour this library relies on is recorded in [`docs/facts.md`](docs/facts.md) with its source URL and retrieval date. The design is in [`docs/specs/wa-cloud-kit.md`](docs/specs/wa-cloud-kit.md) (v0.1) and [`docs/specs/wa-cloud-kit-v0.2.md`](docs/specs/wa-cloud-kit-v0.2.md) (templates, media, multi-tenant notes). Items that can only be checked against Meta's live API are listed in the v0.2 spec §10.
+Every Meta behaviour this library relies on is recorded in [`docs/facts.md`](docs/facts.md) with its source URL and retrieval date. The design is in [`docs/specs/wa-cloud-kit.md`](docs/specs/wa-cloud-kit.md) (v0.1) and [`docs/specs/wa-cloud-kit-v0.2.md`](docs/specs/wa-cloud-kit-v0.2.md) (templates, media, multi-tenant notes) and [`docs/specs/wa-cloud-kit-v0.3.md`](docs/specs/wa-cloud-kit-v0.3.md) (router, Embedded Signup, interactive). Items that can only be checked against Meta's live API are listed in the v0.2 spec §10 and the v0.3 spec §7.
 
 ## License
 

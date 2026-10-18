@@ -3,8 +3,10 @@ export { createWaClient, type RequestOptions, type WaClient } from "./client.js"
 export { createWaBusinessClient, type WaBusinessClient } from "./business-client.js";
 export {
   DEFAULT_BASE_URL,
+  WaAppConfigSchema,
   WaBusinessConfigSchema,
   WaClientConfigSchema,
+  type WaAppConfig,
   type WaBusinessConfig,
   type WaClientConfig,
 } from "./config.js";
@@ -62,6 +64,73 @@ export {
   type TemplateMessagePayload,
   type TextParam,
 } from "./messages/template.js";
+export {
+  LIST_MESSAGE_LIMITS,
+  ListMessagePayloadSchema,
+  REPLY_BUTTON_LIMITS,
+  ReplyButtonsPayloadSchema,
+  SendListInputSchema,
+  SendReplyButtonsInputSchema,
+  buildListMessage,
+  buildReplyButtonsMessage,
+  type ListMessagePayload,
+  type ReplyButtonsPayload,
+  type SendListInput,
+  type SendReplyButtonsInput,
+} from "./messages/interactive.js";
+export {
+  MarkAsReadInputSchema,
+  MarkAsReadPayloadSchema,
+  MarkAsReadResponseSchema,
+  buildMarkAsReadPayload,
+  type MarkAsReadInput,
+  type MarkAsReadPayload,
+  type MarkAsReadResponse,
+  type MarkAsReadResult,
+} from "./messages/read.js";
+export {
+  PhoneSuccessResponseSchema,
+  PinSchema,
+  RegisterPhoneNumberInputSchema,
+  SetTwoStepPinInputSchema,
+  type PhoneSuccessResponse,
+  type PhoneSuccessResult,
+  type RegisterPhoneNumberInput,
+  type SetTwoStepPinInput,
+} from "./phone/register.js";
+export {
+  ListPhoneNumbersInputSchema,
+  ListPhoneNumbersResponseSchema,
+  WaPhoneNumberSchema,
+  findPhoneNumber,
+  type ListPhoneNumbersInput,
+  type ListPhoneNumbersResponse,
+  type ListPhoneNumbersResult,
+  type WaPhoneNumber,
+} from "./business/phone-numbers.js";
+export {
+  SubscribeAppInputSchema,
+  SubscribedAppsResponseSchema,
+  SubscriptionResponseSchema,
+  type ListSubscribedAppsResult,
+  type SubscribeAppInput,
+  type SubscribedAppsResponse,
+  type SubscriptionResponse,
+  type SubscriptionResult,
+  type WaSubscribedApp,
+} from "./business/subscribed-apps.js";
+export {
+  EMBEDDED_SIGNUP_CANCEL_STEPS,
+  EMBEDDED_SIGNUP_FINISH_EVENTS,
+  parseEmbeddedSignupEvent,
+  type WaEmbeddedSignupEvent,
+} from "./signup/event.js";
+export {
+  ExchangeCodeInputSchema,
+  exchangeEmbeddedSignupCode,
+  type ExchangeCodeInput,
+  type WaBusinessTokenResult,
+} from "./signup/exchange.js";
 export {
   MAX_UPLOAD_BYTES,
   SUPPORTED_UPLOAD_MIME_TYPES,
@@ -142,13 +211,40 @@ export {
 export {
   parseWebhookPayload,
   type ParsedWebhook,
+  type WaAccountUpdateEvent,
   type WaTemplateStatusEvent,
+  type WaUnhandledChange,
   type WaWebhookContact,
   type WaWebhookEvent,
 } from "./webhooks/parse.js";
 export {
+  DEFAULT_DEDUPE_TTL_SECONDS,
+  webhookDedupeKey,
+  type WaIdempotencyStore,
+} from "./webhooks/dedupe.js";
+export {
+  createWebhookRouter,
+  type WaDuplicateEvent,
+  type WaRouteResult,
+  type WaRoutedEvent,
+  type WaRoutedUnhandledChange,
+  type WaRoutingKey,
+  type WaTenantResolver,
+  type WaUnroutedItem,
+  type WaWebhookRouter,
+  type WaWebhookRouterOptions,
+} from "./webhooks/router.js";
+export {
+  DELIVERY_STATUS_RANK,
+  reduceMessageStatus,
+  type WaDeliveryStatus,
+  type WaMessageDeliveryState,
+} from "./webhooks/status-reducer.js";
+export {
+  KNOWN_INTERACTIVE_REPLY_TYPES,
   KNOWN_MESSAGE_STATUSES,
   KNOWN_MESSAGE_TYPES,
+  PARTNER_ACCOUNT_EVENTS,
   TEMPLATE_STATUS_EVENTS,
   WebhookEnvelopeSchema,
   type WaInboundMessage,

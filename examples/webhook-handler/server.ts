@@ -1,16 +1,22 @@
-// Minimal WhatsApp webhook handler using only node:http (v0.2 spec §6.1).
+// Minimal multi-tenant WhatsApp webhook handler using only node:http
+// (v0.2 spec §6.1, v0.3 spec §2).
 //
 // Run `pnpm build` first: this imports the built package from ../../dist.
 // Config comes from the environment and is never printed:
 //   WA_APP_SECRET   the app secret that signs deliveries (F-082)
 //   WA_VERIFY_TOKEN the token you typed into the app's webhook settings (F-080)
 //   PORT            optional, default 3000
+//   WA_DEMO_WABA_ID, WA_DEMO_PHONE_NUMBER_ID  optional: one demo tenant
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import {
+  createWebhookRouter,
   parseWebhookPayload,
+  reduceMessageStatus,
   verifyWebhookChallenge,
   verifyWebhookSignature,
-  type WaWebhookEvent,
+  type WaIdempotencyStore,
+  type WaMessageDeliveryState,
+  type WaRoutingKey,
 } from "wa-cloud-kit";
 
 const appSecret = process.env.WA_APP_SECRET;
@@ -29,38 +35,63 @@ const port = Number(process.env.PORT ?? "3000");
 const MAX_BODY_BYTES = 3 * 1024 * 1024; // payloads are up to 3 MB (F-084)
 const MAX_SEEN_KEYS = 10_000;
 
-// DEMO STORAGE ONLY. Meta retries failed deliveries for 7 days and may send
-// duplicates (F-083, F-084, C-1), so production needs storage shared by every
-// instance. This bounded in-memory map evicts the oldest key when full.
+// DEMO STORAGE ONLY. Meta retries failed deliveries for up to 7 days and
+// sends retries to every subscribed app (F-083, F-170), so production needs an
+// atomic store shared by every instance (for example Redis `SET key 1 NX EX
+// ttl`). This bounded in-memory map ignores the TTL and evicts the oldest key.
 const seen = new Map<string, true>();
-
-function firstSighting(key: string): boolean {
-  if (seen.has(key)) {
-    return false;
-  }
-  seen.set(key, true);
-  if (seen.size > MAX_SEEN_KEYS) {
-    const oldest = seen.keys().next();
-    if (!oldest.done) {
-      seen.delete(oldest.value);
+const demoStore: WaIdempotencyStore = {
+  claim: (key) => {
+    if (seen.has(key)) {
+      return Promise.resolve(false);
     }
-  }
-  return true;
+    seen.set(key, true);
+    if (seen.size > MAX_SEEN_KEYS) {
+      const oldest = seen.keys().next();
+      if (!oldest.done) {
+        seen.delete(oldest.value);
+      }
+    }
+    return Promise.resolve(true);
+  },
+  release: (key) => {
+    seen.delete(key);
+    return Promise.resolve();
+  },
+};
+
+// DEMO TENANT TABLE ONLY. A SaaS looks tenants up in its own database. Keys
+// are fake ids; WA_DEMO_PHONE_NUMBER_ID / WA_DEMO_WABA_ID add one tenant.
+interface Tenant {
+  id: string;
+  wabaId: string;
+  phoneNumberId: string;
+}
+const tenants: Tenant[] = [];
+if (
+  process.env.WA_DEMO_WABA_ID !== undefined &&
+  process.env.WA_DEMO_PHONE_NUMBER_ID !== undefined
+) {
+  tenants.push({
+    id: "demo-tenant",
+    wabaId: process.env.WA_DEMO_WABA_ID,
+    phoneNumberId: process.env.WA_DEMO_PHONE_NUMBER_ID,
+  });
 }
 
-/** The dedupe key for an event: message id, status id + status, or the §5 template key. */
-function dedupeKey(event: WaWebhookEvent): string | undefined {
-  switch (event.kind) {
-    case "message":
-      return event.message.id;
-    case "status":
-      return `${event.status.id}:${event.status.status}`;
-    case "template_status":
-      return `${event.wabaId}:${event.templateId}:${event.event}:${String(event.eventTime ?? "")}`;
-    case "error":
-      return undefined;
+/** Phone number first; when both ids are present, the tenant must own the WABA (D-30). */
+function resolveTenant(key: WaRoutingKey): Tenant | null {
+  if (key.phoneNumberId !== undefined) {
+    const tenant = tenants.find((t) => t.phoneNumberId === key.phoneNumberId);
+    return tenant?.wabaId === key.wabaId ? tenant : null;
   }
+  return tenants.find((t) => t.wabaId === key.wabaId) ?? null;
 }
+
+const router = createWebhookRouter({ resolveTenant, idempotency: demoStore });
+
+// DEMO ONLY: delivery state per sent message; a SaaS stores it with the invoice.
+const deliveries = new Map<string, WaMessageDeliveryState>();
 
 /** Collects the request into one Uint8Array; resolves null if it exceeds the cap. */
 async function readRawBody(req: IncomingMessage): Promise<Uint8Array | null> {
@@ -80,16 +111,6 @@ async function readRawBody(req: IncomingMessage): Promise<Uint8Array | null> {
 function reply(res: ServerResponse, status: number, body = ""): void {
   res.writeHead(status, { "content-type": "text/plain" });
   res.end(body);
-}
-
-function handle(event: WaWebhookEvent): void {
-  // The tenant is identified by the WABA (every event) and, for messages and
-  // statuses, the phone number (F-085, F-117).
-  const tenant =
-    event.kind === "template_status"
-      ? `waba=${event.wabaId}`
-      : `waba=${event.wabaId} phone=${event.phoneNumberId}`;
-  console.log(`[${tenant}] ${event.kind}`);
 }
 
 const server = createServer((req, res) => {
@@ -137,13 +158,27 @@ const server = createServer((req, res) => {
       return;
     }
 
-    // Acknowledge immediately, then process (F-083).
+    // Acknowledge immediately, then process (F-083). Production code persists
+    // the raw body before answering: there is no API to fetch past webhooks
+    // (F-171). Meta documents no response timeout (G-21).
     reply(res, 200);
-    for (const event of parsed.events) {
-      const key = dedupeKey(event);
-      if (key === undefined || firstSighting(key)) {
-        handle(event);
+    const result = await router.route(parsed);
+    for (const { tenant, event } of result.routed) {
+      if (event.kind === "status") {
+        const previous = deliveries.get(event.status.id);
+        const state = reduceMessageStatus(previous, event.status);
+        deliveries.set(event.status.id, state);
+        console.log(`[${tenant.id}] status ${event.status.id} → ${state.current}`);
+      } else {
+        console.log(`[${tenant.id}] ${event.kind}`);
       }
+    }
+    for (const { key, reason } of result.unrouted) {
+      // Never dropped silently: store or alert in a real handler.
+      console.warn(`unrouted ${key.field} (${reason}) waba=${key.wabaId}`);
+    }
+    for (const { tenant, change } of result.unhandled) {
+      console.log(`[${tenant.id}] unhandled field ${change.field}`);
     }
   })().catch(() => {
     if (!res.headersSent) {
